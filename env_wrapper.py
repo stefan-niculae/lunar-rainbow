@@ -39,6 +39,7 @@ class EnvWrapper(gym.Env):
         self.n_steps = 0
         self.total_reward = 0
 
+        self._state_infos = state_infos
         if state_infos:
             lows  = np.array([si.low  for si in state_infos])
             highs = np.array([si.high for si in state_infos])
@@ -62,6 +63,12 @@ class EnvWrapper(gym.Env):
     @property
     def state_size(self) -> int:
         return self.observation_space.shape[0]
+
+    @property
+    def config(self) -> dict:
+        return dict(
+            state_infos=[(si.low, si.high, si.bins) for si in self._state_infos]
+        )
 
     def reset(self) -> State:
         self.n_steps = 0

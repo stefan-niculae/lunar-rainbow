@@ -33,9 +33,16 @@ class Agent:
         self._episode = 0
 
         # set random seed
+        self._seed = seed
         random.seed(seed)
         np.random.seed(seed)
         self._env._env.seed(seed)
+
+    @property
+    def config(self) -> dict:
+        return dict(
+            seed=self._seed
+        )
 
     def initialise_episode(self):
         """

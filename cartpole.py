@@ -2,7 +2,7 @@ import math
 from env_wrapper import EnvWrapper, StateInfo
 
 
-class CartPoleWrapper(EnvWrapper):
+class CartPole(EnvWrapper):
     """ This is a wrapper for the CartPole environment as described here:
     https://gym.openai.com/envs/CartPole-v1/
 

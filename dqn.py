@@ -66,17 +66,21 @@ class DQN(Agent):
 
     q_clip = (-10000, +10000)
 
-    normalize = False
+    normalize = True
 
     def __init__(self, env, seed=42,
                  lr=0.005, discount=.99, layer_sizes=(384, 192),
-                 exploration_start=1, exploration_min=.01, exploration_anneal_steps=150):
+                 exploration_start=1, exploration_min=.01, exploration_anneal_steps=150,
+                 loss='mse', hidden_activation='sigmoid', out_activation='linear'):
         super().__init__(env, seed=seed)
         self.discount = discount
         self.lr = lr
 
         # build model
         self.layer_sizes = layer_sizes
+        self.loss = loss
+        self.hidden_activation = hidden_activation
+        self.out_activation = out_activation
         self._model = self._build_model()
 
         # setup exploration
@@ -89,16 +93,36 @@ class DQN(Agent):
         # replay
         self._memory = deque(maxlen=self.memory_size)  # will hold `Transitions`
 
+    @property
+    def config(self) -> dict:
+        c = super().config
+        c.update({attr: getattr(self, attr) for attr in [
+            'batch_size',
+            'memory_size',
+            'n_epochs',
+            'q_clip',
+            'discount',
+            'lr',
+            'layer_sizes',
+            'hidden_activation',
+            'out_activation',
+            'loss',
+            'exploration_start',
+            'exploration_min',
+            'exploration_anneal_steps',
+            'normalize'
+        ]})
+        return c
+
     def _build_model(self) -> Model:
         model = Sequential()
 
-        model.add(Dense(self.layer_sizes[0], activation='sigmoid', input_shape=(self._state_size,)))
+        model.add(Dense(self.layer_sizes[0], activation=self.hidden_activation, input_shape=(self._state_size,)))
         for size in self.layer_sizes[1:]:
-            model.add(Dense(size, activation='sigmoid'))
+            model.add(Dense(size, activation=self.hidden_activation))
 
-        model.add(Dense(self._n_actions, activation='linear'))
-        model.compile(optimizer=Adam(lr=self.lr),
-                      loss='mse')
+        model.add(Dense(self._n_actions, activation=self.out_activation))
+        model.compile(optimizer=Adam(lr=self.lr), loss=self.loss)
         return model
 
     def _select_action(self, state: [float], eval_mode=False) -> int:
@@ -119,17 +143,14 @@ class DQN(Agent):
         self._replay()
 
     def train(self):
-        if True or self._episode % 5 == 0:
-            super().train()
-        else:
-            self._episode += 1
+        super().train()
+
         # Perform episode end updates
         self._exploration_eps -= self._exploration_drop
         self._exploration_eps = max(self._exploration_eps, self.exploration_min)
         if self._episode % 200 == 0:
             self.lr /= 10
             K.set_value(self._model.optimizer.lr, self.lr)
-        # print('eps', self._exploration_eps, 'lr', self.lr, end=' ')
 
     def _replay(self):
         """ sample of batch from experience and fit the network to it """
@@ -154,7 +175,7 @@ class DQN(Agent):
         # print('fit res', hist)
 
     def save(self, path: str):
-        self._model.save(path + '-model.h5')
+        self._model.save(path)
 
 
 class Memory:
