@@ -28,8 +28,8 @@ class DQN(Agent):
     normalize = False
 
     def __init__(self, env, seed=42,
-                 lr=0.005, discount=.99, layer_sizes=(384, 192),
-                 exploration_start=1, exploration_min=.01, exploration_anneal_steps=150,
+                 lr=0.005, discount=.99, exploration=.25,
+                 layer_sizes=(384, 192),
                  loss='mse', hidden_activation='sigmoid', out_activation='linear',
                  batch_size=32, n_epochs=1, memory_size=5000,
                  ):
@@ -47,11 +47,7 @@ class DQN(Agent):
         self._model = self._build_model()
 
         # setup exploration
-        self.exploration_start = exploration_start
-        self.exploration_min = exploration_min
-        self.exploration_anneal_steps = exploration_anneal_steps
-        self._exploration_eps = exploration_start
-        self._exploration_drop = (exploration_start - exploration_min) / exploration_anneal_steps
+        self.exploration = exploration
 
         # replay
         self.memory_size = memory_size
@@ -61,18 +57,16 @@ class DQN(Agent):
     def config(self) -> dict:
         c = super().config
         c.update({attr: getattr(self, attr) for attr in [
-            'batch_size',
-            'memory_size',
-            'n_epochs',
-            'discount',
             'lr',
+            'discount',
+            'exploration',
             'layer_sizes',
             'hidden_activation',
             'out_activation',
             'loss',
-            'exploration_start',
-            'exploration_min',
-            'exploration_anneal_steps',
+            'batch_size',
+            'n_epochs',
+            'memory_size',
             'normalize'
         ]})
         return c
@@ -82,9 +76,9 @@ class DQN(Agent):
 
         model.add(Dense(self.layer_sizes[0], activation=self.hidden_activation, input_shape=(self._state_size,)))
         for size in self.layer_sizes[1:]:
-            model.add(Dense(size, activation=self.hidden_activation, kernel_initializer='lecun_uniform'))
+            model.add(Dense(size, activation=self.hidden_activation))
 
-        model.add(Dense(self._n_actions, activation=self.out_activation, kernel_initializer='lecun_uniform'))
+        model.add(Dense(self._n_actions, activation=self.out_activation))
         model.compile(optimizer=Adam(lr=self.lr), loss=self.loss)
         return model
 
@@ -93,7 +87,7 @@ class DQN(Agent):
         q = self._model.predict(state)[0]
 
         # Explore
-        if random.random() < self._exploration_eps and not eval_mode:
+        if random.random() < self.exploration and not eval_mode:
             return np.random.choice(self._n_actions)
 
         # Exploit
@@ -107,12 +101,6 @@ class DQN(Agent):
         # after enough enough experience
         if len(self._memory) >= self.batch_size:
             self._replay()
-
-    def train(self):
-        super().train()
-        # Perform episode end updates
-        self._exploration_eps -= self._exploration_drop
-        self._exploration_eps = max(self._exploration_eps, self.exploration_min)
 
     def _replay(self):
         """ sample of batch from experience and fit the network to it """
