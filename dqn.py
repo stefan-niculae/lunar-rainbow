@@ -1,5 +1,6 @@
 import random
 from collections import deque
+from copy import copy
 import numpy as np
 from keras import layers
 from keras.models import Sequential, Model
@@ -438,7 +439,7 @@ class DQNP(Agent):
 
     def train(self):
         """ overridden because we need state history """
-        history = self._initial_history.copy()
+        history = copy(self._initial_history)
         current_state = self.initialise_episode()
         done = False
 
@@ -466,7 +467,7 @@ class DQNP(Agent):
     def eval(self, n_episodes=100) -> [dict]:
         stats = []
         for episode in range(n_episodes):
-            history = self._initial_history.copy()
+            history = copy(self._initial_history)
             state = self.initialise_episode()
             done = False
 

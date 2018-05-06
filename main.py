@@ -48,8 +48,10 @@ logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s', date
 
 def run_and_save(seed: int):
     start_time = time()
-    eval_stats: [pd.DataFrame] = []
-    train_stats: [dict] = []
+    # eval_stats: [pd.DataFrame] = []
+    # train_stats: [dict] = []
+    eval_stats = []
+    train_stats = []
     solve_episode = None
 
     env = env_class()
