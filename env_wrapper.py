@@ -1,8 +1,8 @@
-from typing import Union, List, Tuple
+from typing import Union, Tuple
 import numpy as np
 import gym
 
-State = Union[List[float], Tuple[int]]
+State = Union[np.array, Tuple[int]]
 
 class StateInfo:
     def __init__(self, bins, low, high=None):
@@ -88,11 +88,13 @@ class EnvWrapper(gym.Env):
         self._env.render(*args, **kwargs)
 
     def solved(self, rewards: [float]) -> bool:
-        assert self.solve_runs is not None
         assert self.solve_threshold is not None
 
-        rewards = rewards[-100:]
-        return len(rewards) == 100 and rewards.mean() > self.solve_threshold
+        if self.solve_runs:
+            if len(rewards) < self.solve_runs:
+                return False
+            rewards = rewards[-self.solve_runs:]
+        return rewards.mean() > self.solve_threshold
 
     def _process_state(self, state: State) -> State:
         if self.normalize:

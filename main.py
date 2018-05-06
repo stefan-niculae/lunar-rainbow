@@ -16,12 +16,12 @@ from lunarlander import LunarLander
 # Parse the arguments
 parser = argparse.ArgumentParser(description="Experiment parameters")
 parser.add_argument('--env',            type=str, default='lander',       choices=['pole', 'lander'],  help='The environment to run in')
-parser.add_argument('--agent',          type=str, default='dqn',    choices=['ql', 'qlp', 'dqn', 'dqnp'],  help='The agent that learns and performs')
+parser.add_argument('--agent',          type=str, default='dqnp',    choices=['ql', 'qlp', 'dqn', 'dqnp'],  help='The agent that learns and performs')
 # parser.add_argument('--discr',          type=str, default='observed',   choices=['theory', 'observed'],  help='Discretization type')
 parser.add_argument('--episodes',       type=int, default=400,        help="The maximum number of episodes per run")
-parser.add_argument('--eval-interval',  type=int, default=20,          help='After how many episodes to evaluate')
+parser.add_argument('--eval-interval',  type=int, default=50,          help='After how many episodes to evaluate')
 parser.add_argument('--n-evals',        type=int, default=5,           help='How many times to evaluate')
-parser.add_argument('--n-jobs',         type=int, default=4,           help='Number of parallel seeds to try (-1 for all)')
+parser.add_argument('--n-jobs',         type=int, default=1,           help='Number of parallel seeds to try (-1 for all)')
 parser.add_argument('--output-dir',     type=str, default='outputs',    help='Folder to store result stats (csv)')
 
 args = parser.parse_args()
@@ -50,6 +50,7 @@ def run_and_save(seed: int):
     start_time = time()
     eval_stats: [pd.DataFrame] = []
     train_stats: [dict] = []
+    solve_episode = None
 
     env = env_class()
     agent = agent_class(env, seed=seed)
@@ -57,7 +58,6 @@ def run_and_save(seed: int):
     print('Agent', agent_class.__name__, str(agent.config))
 
     """ train """
-    episode = 0
     for episode in range(1, args.episodes + 1):
         agent.train()
         r, s = env.total_reward, env.n_steps
@@ -72,10 +72,10 @@ def run_and_save(seed: int):
 
             r = stats.reward
             avg, std, max_r = r.mean(), r.std(), r.max()
-            logging.info('({seed}) eval ep {episode}: {avg:.2f} ± {std:.2f} ({max_r:.2f})'.format(**locals()))
+            logging.info('({seed}) eval ep {episode}: {avg:.2f} ± {std:.2f} (max {max_r:.2f})'.format(**locals()))
 
-            # if env.solved(eval_stats.reward):
-            #     break
+            if env.solved(stats.reward):
+                solve_episode = episode
 
     """ save """
     save_dir = out_dir + '-' + str(seed)
@@ -88,7 +88,7 @@ def run_and_save(seed: int):
     duration = time() - start_time
     with open(save_dir + '/stats.json', 'w') as f:
         json.dump(dict(
-            episodes=episode,
+            solve_episode=solve_episode,
             time=duration,
             max_reward=max(train_df.reward.max(), eval_df.reward.max()),
         ), f)

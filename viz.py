@@ -73,3 +73,18 @@ def training_progress_static(dfs: [pd.DataFrame], window_sizes: [int], names: [s
     plt.ylabel('Reward')
 
     plt.legend()  # bottom right
+
+def param_decay(n_episodes, init, decay, min_val, label=None):
+    """ Helps decide exploration parameters by visualizing the decay curve. """
+    xs = list(range(n_episodes))
+    ys = [init]
+
+    for _ in xs[:-1]:
+        # because of floating point errors, compute it iteratively instead of analytically
+        ys.append(max(ys[-1] * decay, min_val))
+
+    plt.plot(xs, ys, label=label)
+
+#     plt.ylim(0, 1)
+    plt.gca().xaxis.set_major_formatter(FuncFormatter(lambda x, _: readable_big_number(x)))
+    plt.xlabel('Episode')
