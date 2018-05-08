@@ -172,7 +172,7 @@ class Memory:
         # nor to the right, so we can look back at still present history
         # nor to the left, so we can look in to already recorded future
         p[self.cursor-self.history_len-2 : self.cursor+self.multi_step+2] = 0
-        indices = np.random.choice(self.size, size=self.batch_size, p=p/sum(p))  # DEBUG
+        indices = np.random.choice(self.size, size=self.batch_size, p=p/sum(p))
 
         history_indices = indices + np.expand_dims(range(self.history_len), axis=1)
         history_indices %= self.size
@@ -212,15 +212,15 @@ class DQNP(Agent):
     # TODO try logcosh loss, n_steps, idealization, per, selu, alpha dropout, he_uniform
     def __init__(
         self, env, seed=24,
-        lr_init=.005, lr_decay=.25, lr_min=.0001, decay_freq=100,
+        lr_init=.005, lr_decay=.1, lr_min=.00001, decay_freq=200,
         discount=.99, idealization=1,
         multi_steps=1, history_len=2,
         layer_sizes=(384, 192), input_dropout=0, hidden_dropout=0, batch_normalization=False,
         loss='mse', hidden_activation='sigmoid', out_activation='linear', weights_init='lecun_uniform',
-        double=True, target_update_freq=25,
-        dueling=True, streams_size=0,
-        prioritize_replay=True, priority_exp=.01, priority_shift=.1,
-        policy='max-boltzmann', exploration_start=1, exploration_min=.05, exploration_anneal_steps=150,
+        double=False, target_update_freq=25,
+        dueling=False, streams_size=0,
+        prioritize_replay=False, priority_exp=.01, priority_shift=.1,
+        policy='eps-greedy', exploration_start=1, exploration_min=.1, exploration_anneal_steps=150,
         exploration_temp=2, exploration_temp_min=.2,
         batch_size=32, n_epochs=1, memory_size=50000,
         q_clip=(-10000, +10000), exploration_q_clip=(-1000, 1000)
