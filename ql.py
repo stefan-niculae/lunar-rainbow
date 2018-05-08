@@ -16,7 +16,7 @@ class QL(Agent):
     """
     discrete = True
 
-    def __init__(self, env, seed, discount=.9, epsilon=.1, lr=.5):
+    def __init__(self, env, seed=24, discount=.9, epsilon=.1, lr=.5):
         super().__init__(env, seed)
         self.discount = discount
         self.epsilon = epsilon
@@ -64,27 +64,42 @@ class QL(Agent):
 class QLP(Agent):
     discrete = True
 
-    def __init__(self, env, seed,
+    def __init__(self, env, seed=24,
                  init_mean=0, init_std=.1,
-                 lr_init=.3, lr_decay=.99986, lr_min=.01,
-                 exploration_start=1, exploration_min=.05,
-                 discount=.95,
-                 idealization=.75,
-                 anneal_steps=65000):
+                 lr_init=.25, lr_decay=.5, decay_freq=500, lr_min=.0001,
+                 exploration_start=1, exploration_min=.05, anneal_steps=500,
+                 discount=.9,
+                 idealization=.75):
         super().__init__(env, seed)
         self.discount = discount
+        self.idealization = idealization
+
         self.lr_init = lr_init
         self.lr_decay = lr_decay
         self.lr_min = lr_min
+        self.decay_freq = decay_freq
         self._lr = lr_init
-        self.idealization = idealization
 
         self.exploration_start = exploration_start
         self.exploration_min = exploration_min
+        self.anneal_steps = anneal_steps
         self._exploration_eps = exploration_start
         self._exploration_drop = (exploration_start - exploration_min) / anneal_steps
 
+        self.init_mean = init_mean
+        self.init_std = init_std
         self.q = defaultdict(lambda: np.random.normal(init_mean, init_std, size=self._n_actions))    # state: value of each action
+
+    @property
+    def config(self) -> dict:
+        c = super().config
+        c.update({attr: getattr(self, attr) for attr in [
+            'init_mean', 'init_std',
+            'lr_init', 'lr_decay', 'decay_freq', 'lr_min',
+            'discount', 'idealization',
+            'exploration_start', 'exploration_min', 'anneal_steps',
+        ]})
+        return c
 
     def _select_action(self, state: tuple, eval_mode=False) -> int:
         # Explore
@@ -98,7 +113,8 @@ class QLP(Agent):
         super().train()
         # Perform episode end updates
         self._exploration_eps = max(self._exploration_eps - self._exploration_drop, self.exploration_min)
-        self._lr = max(self._lr * self.lr_decay, self.lr_min)
+        if self._episode % self.decay_freq == 0:
+            self._lr = max(self._lr * self.lr_decay, self.lr_min)
 
     def _learn_transition(self, state: tuple, action, reward, next_state, done):
         if done:

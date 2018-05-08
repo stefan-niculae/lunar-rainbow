@@ -20,7 +20,7 @@ class Agent:
     normalize = False
     discrete = False
 
-    def __init__(self, env: EnvWrapper, seed=42):
+    def __init__(self, env: EnvWrapper, seed=24):
         self._env = env  # environment wrapper that provides extra info
         self._state_size = self._env.state_size
         self._n_actions  = self._env.n_actions
@@ -33,7 +33,7 @@ class Agent:
         self._episode = 0
 
         # set random seed
-        self._seed = seed
+        self.seed = seed
         random.seed(seed)
         np.random.seed(seed)
         self._env._env.seed(seed)
@@ -41,7 +41,7 @@ class Agent:
     @property
     def config(self) -> dict:
         return dict(
-            seed=self._seed
+            seed=self.seed
         )
 
     def initialise_episode(self):

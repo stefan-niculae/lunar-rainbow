@@ -22,12 +22,10 @@ class CartPole(EnvWrapper):
     actions: move left | move right
     reward: +1 for standing up, -20 for falling
     """
-    discretize = True
-
     solve_runs = 100
     solve_threshold = 195
 
-    def __init__(self, discretization='theory', penalty=-20):
+    def __init__(self, discretization='observed', penalty=-20):
         if discretization == 'theory':
             state_infos = [
                 StateInfo(10, 2.4),  # lateral position

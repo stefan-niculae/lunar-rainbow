@@ -27,7 +27,7 @@ class DQN(Agent):
     """
     normalize = False
 
-    def __init__(self, env, seed=42,
+    def __init__(self, env, seed=24,
                  lr=0.005, discount=.99, exploration=.25,
                  layer_sizes=(384, 192),
                  loss='mse', hidden_activation='sigmoid', out_activation='linear',
@@ -211,16 +211,16 @@ class DQNP(Agent):
 
     # TODO try logcosh loss, n_steps, idealization, per, selu, alpha dropout, he_uniform
     def __init__(
-        self, env, seed=42,
-        lr_init=.005, lr_decay=.99995, lr_min=.0005,
+        self, env, seed=24,
+        lr_init=.005, lr_decay=.25, lr_min=.0001, decay_freq=100,
         discount=.99, idealization=1,
         multi_steps=1, history_len=2,
         layer_sizes=(384, 192), input_dropout=0, hidden_dropout=0, batch_normalization=False,
         loss='mse', hidden_activation='sigmoid', out_activation='linear', weights_init='lecun_uniform',
-        double=False, target_update_freq=25,
-        dueling=False, streams_size=0,
-        prioritize_replay=False, priority_exp=.01, priority_shift=.1,
-        policy='eps-greedy', exploration_start=1, exploration_min=.05, exploration_anneal_steps=150,
+        double=True, target_update_freq=25,
+        dueling=True, streams_size=0,
+        prioritize_replay=True, priority_exp=.01, priority_shift=.1,
+        policy='max-boltzmann', exploration_start=1, exploration_min=.05, exploration_anneal_steps=150,
         exploration_temp=2, exploration_temp_min=.2,
         batch_size=32, n_epochs=1, memory_size=50000,
         q_clip=(-10000, +10000), exploration_q_clip=(-1000, 1000)
@@ -267,6 +267,7 @@ class DQNP(Agent):
         self.lr_init = lr_init
         self.lr_decay = lr_decay
         self.lr_min = lr_min
+        self.decay_freq = decay_freq
         self.idealization = idealization
         self.dueling = dueling
         self.double = double
@@ -330,7 +331,7 @@ class DQNP(Agent):
     def config(self) -> dict:
         c = super().config
         c.update({attr: getattr(self, attr) for attr in [
-            'lr_init', 'lr_decay', 'lr_min',
+            'lr_init', 'lr_decay', 'lr_min', 'decay_freq',
             'discount', 'idealization',
             'multi_steps', 'history_len',
             'layer_sizes', 'input_dropout', 'hidden_dropout', 'batch_normalization',
@@ -446,8 +447,9 @@ class DQNP(Agent):
         self._explore_proba = max(self._explore_proba - self._exploration_drop, self.exploration_min)
         self._exploration_tau = max(self._exploration_tau - self._exploration_tau_drop, self.exploration_temp_min)
 
-        self._lr = max(self._lr * self.lr_decay, self.lr_min)
-        K.set_value(self._model.optimizer.lr, self._lr)
+        if self._episode % self.decay_freq == 0:
+            self._lr = max(self._lr * self.lr_decay, self.lr_min)
+            K.set_value(self._model.optimizer.lr, self._lr)
 
         if self.double and self._episode % self.target_update_freq == 0:
             self._update_target_weights()
