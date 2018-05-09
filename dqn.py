@@ -665,7 +665,7 @@ class DQNP(Agent):
     normalize = False
 
     def __init__(self, env, seed=42,
-                 lr_init=0.005, decay_freq=200, lr_decay=.1, lr_min=.0001,
+                 lr_init=0.005, decay_freq=200, lr_decay=.1, lr_min=.00001,
                  discount=.99, layer_sizes=(384, 192),
                  exploration_start=1, exploration_min=.01, exploration_anneal_steps=150,
                  loss='mse', hidden_activation='sigmoid', out_activation='linear',

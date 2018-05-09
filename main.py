@@ -40,6 +40,19 @@ agent_class = {
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s', datefmt='%H:%M:%S')
 
+configs = [
+    dict(lr_init=0.002),
+    dict(decay_freq=100, lr_decay=0.35),
+    dict(discount=.975),
+    dict(discount=.9),
+    dict(discount=.75),
+    dict(exploration_anneal_steps=75),
+    dict(exploration_anneal_steps=300),
+    dict(history_len=3),
+    dict(history_len=4),
+    dict(layer_sizes=(256, 256)),
+]
+
 
 def run_and_save(seed: int):
     start_time = time()
@@ -50,7 +63,8 @@ def run_and_save(seed: int):
     solve_episode = None
 
     env = env_class()
-    agent = agent_class(env, seed=seed)
+    c = configs[seed % len(configs)]
+    agent = agent_class(env, seed=seed, **c)
     print('Env',   env_class.__name__,   str(env.config))
     print('Agent', agent_class.__name__, str(agent.config))
 
