@@ -826,9 +826,14 @@ class DQNP(Agent):
         next_max = next_q.max(axis=1)
 
         target = return_ + (1 - done) * (self.discount * next_max)  # add future discount only if not done
-        q[np.arange(len(action)), action] = target
+        actions_slice = np.arange(len(action)), action
+        q[actions_slice] = target
 
         self._model.fit(state, q, epochs=self.n_epochs, verbose=0)
+
+        predictions = self._model.predict(state)
+        errors = abs(predictions[actions_slice] - target)
+        self._memory.update_priorities(memory_indices, errors)
 
     def save(self, path: str):
         self._model.save(path + '.h5')
