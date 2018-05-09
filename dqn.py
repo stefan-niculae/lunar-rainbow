@@ -681,6 +681,7 @@ class DQNP(Agent):
         self.lr_min = lr_min
         self._lr = lr_init
 
+        self.history_len = history_len
         # build model
         self.layer_sizes = layer_sizes
         self.loss = loss
@@ -701,7 +702,6 @@ class DQNP(Agent):
         # replay
         self.memory_size = memory_size
         self.multi_steps = multi_steps
-        self.history_len = history_len
         self._memory = Memory(capacity=memory_size,
                               state_size=self._env.state_size,
                               multi_step=multi_steps,
