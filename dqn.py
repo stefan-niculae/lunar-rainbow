@@ -636,7 +636,7 @@ class Memory:
         p[self.cursor-self.history_len-2 : self.cursor+self.multi_step+2] = 0
         indices = np.random.choice(self.size, size=self.batch_size, p=p/sum(p))
 
-        history_indices = indices + np.expand_dims(range(self.history_len), axis=1)
+        history_indices = indices + np.expand_dims(np.arange(self.history_len), axis=1)
         history_indices %= self.size
         s = np.concatenate(self.states[history_indices], axis=1)
 
@@ -765,7 +765,22 @@ class DQNP(Agent):
             self._replay()
 
     def train(self):
-        super().train()
+        """ overridden because we need state history """
+        blank_state = np.zeros(self._state_size)
+        state_history = deque([blank_state] * (self.history_len-1), maxlen=self.history_len)  # to be copied
+        current_state = self.initialise_episode()
+        done = False
+
+        while not done:
+            state_history.append(current_state)
+
+            action = self._select_action(np.concatenate(state_history))
+            next_state, reward, done = self._env.step(action)
+            self._learn_transition(current_state, action, reward, next_state, done)
+
+            current_state = next_state
+
+        self._episode += 1
 
         # Perform episode end updates
         self._exploration_eps -= self._exploration_drop
@@ -774,6 +789,25 @@ class DQNP(Agent):
         if self._episode % self.decay_freq == 0:
             self._lr = max(self._lr * self.lr_decay, self.lr_min)
             K.set_value(self._model.optimizer.lr, self._lr)
+
+    def eval(self, n_episodes=100) -> [dict]:
+        stats = []
+        for episode in range(n_episodes):
+            blank_state = np.zeros(self._state_size)
+            state_history = deque([blank_state] * (self.history_len - 1), maxlen=self.history_len)  # to be copied
+            state = self.initialise_episode()
+            done = False
+
+            while not done:
+                state_history.append(state)
+                action = self._select_action(np.concatenate(state_history), eval_mode=True)
+                state, reward, done = self._env.step(action)
+
+            stats.append({
+                'reward': self._env.total_reward,
+                'steps':  self._env.n_steps,
+            })
+        return stats
 
     def _replay(self):
         """ sample of batch from experience and fit the network to it """
