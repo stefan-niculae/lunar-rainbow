@@ -43,14 +43,22 @@ logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s', date
 configs = [
     dict(lr_init=0.002),
     dict(decay_freq=100, lr_decay=0.35),
+    dict(lr_init=0.002, decay_freq=100, lr_decay=0.35),
     dict(discount=.975),
     dict(discount=.9),
+    dict(discount=.9, lr_init=0.002, decay_freq=100, lr_decay=0.35),
     dict(discount=.75),
     dict(exploration_anneal_steps=75),
+    dict(exploration_anneal_steps=75, lr_init=0.002, decay_freq=100, lr_decay=0.35),
     dict(exploration_anneal_steps=300),
+    dict(exploration_anneal_steps=300, lr_init=0.002, decay_freq=100, lr_decay=0.35),
     dict(history_len=3),
     dict(history_len=4),
     dict(layer_sizes=(256, 256)),
+    dict(layer_sizes=(384, 256)),
+    dict(layer_sizes=(256, 384)),
+    dict(layer_sizes=(256, 192)),
+    dict(layer_sizes=(192, 192)),
 ]
 
 
