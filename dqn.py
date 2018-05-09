@@ -735,7 +735,7 @@ class DQNP(Agent):
         model = Sequential()
 
         model.add(Dense(self.layer_sizes[0], activation=self.hidden_activation, kernel_initializer='lecun_uniform',
-                        input_shape=(self._state_size,)))
+                        input_shape=(self._state_size * self.history_len,)))
         for size in self.layer_sizes[1:]:
             model.add(Dense(size, activation=self.hidden_activation, kernel_initializer='lecun_uniform',))
 
