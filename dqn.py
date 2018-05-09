@@ -672,6 +672,7 @@ class DQNP(Agent):
                  q_clip=(-10000, +10000),
                  batch_size=32, n_epochs=1, memory_size=50000,
                  multi_steps=1, history_len=2,
+                 prioritize_replay=True, priority_exp=2, priority_shift=.1,
                  ):
         super().__init__(env, seed=seed)
         self.discount = discount
@@ -702,13 +703,16 @@ class DQNP(Agent):
         # replay
         self.memory_size = memory_size
         self.multi_steps = multi_steps
+        self.prioritize_replay = prioritize_replay
+        self.priority_exp = priority_exp
+        self.priority_shift = priority_shift
         self._memory = Memory(capacity=memory_size,
                               state_size=self._env.state_size,
                               multi_step=multi_steps,
                               history_len=history_len,
                               batch_size=batch_size,
-                              epsilon=.01,
-                              prioritize=False)
+                              epsilon=priority_shift,
+                              prioritize=prioritize_replay)
 
     @property
     def config(self) -> dict:
@@ -730,6 +734,7 @@ class DQNP(Agent):
             'n_epochs',
             'history_len',
             'multi_steps',
+            'prioritize_replay', 'priority_exp', 'priority_shift',
         ]})
         return c
 

@@ -47,7 +47,7 @@ def training_progress_static(dfs: [pd.DataFrame], window_sizes: [int], names: [s
         if window_size % 2 == 0:
             window_size += 1  # must be odd
 
-        color = f'C{names.index(name)}'
+        color = f'C{names.index(name) % 10}'
 
         stats = df.groupby('episode').describe().reward
         mean = stats['mean']

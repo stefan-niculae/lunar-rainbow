@@ -47,6 +47,7 @@ def save(agent, env, duration, train_stats: [dict], eval_stats: [pd.DataFrame]=N
     tail_std = train_df.reward.tail(100).std()
     max_reward = train_df.reward.max()
     final_reward = train_df.reward.iloc[-1]
+    n_eps = train_df.episode.iloc[-1]
 
     if eval_stats:
         eval_df  = pd.concat(eval_stats)
@@ -63,6 +64,7 @@ def save(agent, env, duration, train_stats: [dict], eval_stats: [pd.DataFrame]=N
             tail_avg=tail_avg,
             tail_std=tail_std,
             final_reward=final_reward,
+            n_eps=n_eps,
         ), f)
     with open(save_dir + '/agent.json', 'w') as f:
         json.dump(agent.config, f)
