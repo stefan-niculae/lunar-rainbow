@@ -12,16 +12,16 @@ from simulation import save
 
 
 parser = argparse.ArgumentParser(description="Experiment parameters")
-parser.add_argument('--env',            type=str, default='pole',       choices=['pole', 'lander'],  help='The environment to run in')
+parser.add_argument('--env',            type=str, default='lander',       choices=['pole', 'lander'],  help='The environment to run in')
 parser.add_argument('--agent',          type=str, default='dqnp',    choices=['ql', 'qlp', 'dqn', 'dqnp'],  help='The agent that learns and performs')
 # parser.add_argument('--discr',          type=str, default='observed',   choices=['theory', 'observed'],  help='Discretization type')
 parser.add_argument('--episodes',       type=int, default=400,        help="The maximum number of episodes per run")
 parser.add_argument('--eval-interval',  type=int, default=50,          help='After how many episodes to evaluate')
 parser.add_argument('--n-evals',        type=int, default=10,           help='How many times to evaluate')
-parser.add_argument('--n-jobs',         type=int, default=4,           help='Number of parallel seeds to try (-1 for all)')
+parser.add_argument('--n-jobs',         type=int, default=1,           help='Number of parallel seeds to try (-1 for all)')
 parser.add_argument('--output-dir',     type=str, default='outputs',    help='Folder to store result stats (csv)')
 
-log_train_episodes = False
+log_train_episodes = True
 
 args = parser.parse_args()
 
@@ -65,6 +65,7 @@ def run_and_save(seed: int):
         # evaluation
         if episode % args.eval_interval == 0:
             stats = pd.DataFrame(agent.eval(n_episodes=args.n_evals))
+            print(agent.__dict__)
             stats['episode'] = episode
             eval_stats.append(stats)
 
