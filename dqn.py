@@ -728,6 +728,8 @@ class DQNP(Agent):
             'batch_size',
             'memory_size',
             'n_epochs',
+            'history_len',
+            'multi_steps',
         ]})
         return c
 
