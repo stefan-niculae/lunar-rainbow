@@ -47,7 +47,7 @@ def training_progress_static(dfs: [pd.DataFrame], window_sizes: [int], names: [s
         if window_size % 2 == 0:
             window_size += 1  # must be odd
 
-        color = f'C{i}'
+        color = f'C{names.index(name)}'
 
         stats = df.groupby('episode').describe().reward
         mean = stats['mean']
@@ -64,7 +64,7 @@ def training_progress_static(dfs: [pd.DataFrame], window_sizes: [int], names: [s
                     ws += 1  # must be odd
             smoothed = savgol_filter(mean, ws, polyorder=1)
             plt.plot(mean.index, smoothed, alpha=1, label=name, color=color)
-            mean.plot(alpha=.25, label='', color=color)
+            mean.plot(alpha=.05, label='', color=color)
 
     plt.gca().xaxis.set_major_formatter(FuncFormatter(lambda x, _: readable_big_number(x)))
     # plt.axhline(c='grey')

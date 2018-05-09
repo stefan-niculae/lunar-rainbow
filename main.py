@@ -21,7 +21,7 @@ parser.add_argument('--n-evals',        type=int, default=10,           help='Ho
 parser.add_argument('--n-jobs',         type=int, default=1,           help='Number of parallel seeds to try (-1 for all)')
 parser.add_argument('--output-dir',     type=str, default='outputs',    help='Folder to store result stats (csv)')
 
-log_train_episodes = True
+log_train_episodes = False
 
 args = parser.parse_args()
 
@@ -87,7 +87,6 @@ def run_and_save(seed: int):
         # evaluation
         if episode % args.eval_interval == 0:
             stats = pd.DataFrame(agent.eval(n_episodes=args.n_evals))
-            print(agent.__dict__)
             stats['episode'] = episode
             eval_stats.append(stats)
 
