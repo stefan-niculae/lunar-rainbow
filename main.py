@@ -59,18 +59,18 @@ configs = [
     # dict(layer_sizes=(256, 384)),
     # dict(layer_sizes=(256, 192)),
     # dict(layer_sizes=(192, 192)),
-    dict(prioritize=False),
-    dict(prioritize=False, history_len=3),
-    dict(prioritize=False, history_len=4),
-    dict(prioritize=True, priority_exp=.01),
-    dict(prioritize=True, priority_exp=.1),
-    dict(prioritize=True, priority_exp=.3),
-    dict(prioritize=True, priority_exp=1),
-    dict(prioritize=True, priority_exp=2),
-    dict(prioritize=True, priority_exp=3),
-    dict(prioritize=True, priority_exp=5),
-    dict(prioritize=True, priority_exp=10),
-    dict(prioritize=True, priority_exp=50),
+    dict(prioritize_replay=False),
+    dict(prioritize_replay=False, history_len=3),
+    dict(prioritize_replay=False, history_len=4),
+    dict(prioritize_replay=True, priority_exp=.01),
+    dict(prioritize_replay=True, priority_exp=.1),
+    dict(prioritize_replay=True, priority_exp=.3),
+    dict(prioritize_replay=True, priority_exp=1),
+    dict(prioritize_replay=True, priority_exp=2),
+    dict(prioritize_replay=True, priority_exp=3),
+    dict(prioritize_replay=True, priority_exp=5),
+    dict(prioritize_replay=True, priority_exp=10),
+    dict(prioritize_replay=True, priority_exp=50),
 ]
 
 
@@ -91,7 +91,7 @@ def run_and_save(seed: int):
     """ train """
     for episode in range(1, args.episodes + 1):
         duration = time() - start_time
-        if duration > 3600:
+        if duration > 2000:
             break
 
         agent.train()
