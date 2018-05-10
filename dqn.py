@@ -136,7 +136,7 @@ class DQNP(Agent):
                  loss='mse', hidden_activation='sigmoid', out_activation='linear',
                  q_clip=(-10000, +10000),
                  double=False, target_update_freq=25,
-                 batch_size=32, n_epochs=1, memory_size=5000,
+                 batch_size=32, n_epochs=1, memory_size=50000,
                  multi_steps=1, history_len=2,
                  prioritize_replay=True, priority_exp=0.6, priority_shift=.01,
                  ):
