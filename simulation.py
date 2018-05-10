@@ -2,7 +2,19 @@ import json
 from datetime import datetime
 from time import time
 import os
+import numpy as np
 import pandas as pd
+
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        else:
+            return super().default(obj)
 
 
 def eval_config(config: dict, env, agent_class, n_eps=300, n_evals=20, max_time=None, param_space=None, agent_seed=24):
@@ -65,7 +77,7 @@ def save(agent, env, duration, train_stats: [dict], eval_stats: [pd.DataFrame]=N
             tail_std=tail_std,
             final_reward=final_reward,
             n_eps=n_eps,
-        ), f)
+        ), f, cls=NumpyEncoder)
     with open(save_dir + '/agent.json', 'w') as f:
         json.dump(agent.config, f)
     with open(save_dir + '/env.json', 'w') as f:
