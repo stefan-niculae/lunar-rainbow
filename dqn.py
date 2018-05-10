@@ -634,7 +634,7 @@ class Memory:
         # nor to the right, so we can look back at still present history
         # nor to the left, so we can look in to already recorded future
         p[self.cursor-self.history_len-2 : self.cursor+self.multi_step+2] = 0
-        indices = np.random.choice(self.size, size=self.batch_size, p=p/sum(p))
+        indices = np.random.choice(self.size, replace=False, size=self.batch_size, p=p/sum(p))
 
         history_indices = indices + np.expand_dims(np.arange(self.history_len), axis=1)
         history_indices %= self.size
@@ -670,9 +670,10 @@ class DQNP(Agent):
                  exploration_start=1, exploration_min=.01, exploration_anneal_steps=150,
                  loss='mse', hidden_activation='sigmoid', out_activation='linear',
                  q_clip=(-10000, +10000),
+                 double=False, target_update_freq=25,
                  batch_size=32, n_epochs=1, memory_size=50000,
                  multi_steps=1, history_len=2,
-                 prioritize_replay=True, priority_exp=2, priority_shift=.1,
+                 prioritize_replay=False, priority_exp=2, priority_shift=.1,
                  ):
         super().__init__(env, seed=seed)
         self.discount = discount
@@ -692,6 +693,13 @@ class DQNP(Agent):
         self.batch_size = batch_size
         self.q_clip = q_clip
         self._model = self._build_model()
+        self.double = double
+        self.target_update_freq = target_update_freq
+        if self.double:
+            self._target_model = self._build_model()
+            self._target_model.set_weights(self._model.get_weights())
+        else:
+            self._target_model = None
 
         # setup exploration
         self.exploration_start = exploration_start
@@ -735,6 +743,7 @@ class DQNP(Agent):
             'history_len',
             'multi_steps',
             'prioritize_replay', 'priority_exp', 'priority_shift',
+            'double', 'target_update_freq',
         ]})
         return c
 
@@ -766,7 +775,7 @@ class DQNP(Agent):
         # remember
         self._memory.add(state, action, reward, done)
         # after enough enough experience
-        if len(self._memory) >= self.batch_size:
+        if len(self._memory) >= self.batch_size + 10:
             self._replay()
 
     def train(self):
@@ -795,6 +804,9 @@ class DQNP(Agent):
             self._lr = max(self._lr * self.lr_decay, self.lr_min)
             K.set_value(self._model.optimizer.lr, self._lr)
 
+        if self.double and self._episode % self.target_update_freq == 0:
+            self._target_model.set_weights(self._model.get_weights())  # TODO try not sudden
+
     def eval(self, n_episodes=100) -> [dict]:
         stats = []
         for episode in range(n_episodes):
@@ -821,9 +833,16 @@ class DQNP(Agent):
 
         q = self._model.predict(state)
         q = np.clip(q, *self.q_clip)
-        next_q = self._model.predict(next_state)
-        next_q = np.clip(next_q, *self.q_clip)
-        next_max = next_q.max(axis=1)
+
+        if self.double:
+            next_q = self._target_model.predict(next_state)
+            next_q = np.clip(next_q, *self.q_clip)
+            main_argmax = q.argmax(axis=1)  # pick according to latest estimations
+            next_max = next_q[[range(self.batch_size), main_argmax]]  # but use old estimation instead
+        else:
+            next_q = self._model.predict(next_state)
+            next_q = np.clip(next_q, *self.q_clip)
+            next_max = next_q.max(axis=1)
 
         target = return_ + (1 - done) * (self.discount * next_max)  # add future discount only if not done
         actions_slice = np.arange(len(action)), action
@@ -831,9 +850,10 @@ class DQNP(Agent):
 
         self._model.fit(state, q, epochs=self.n_epochs, verbose=0)
 
-        predictions = self._model.predict(state)
-        errors = abs(predictions[actions_slice] - target)
-        self._memory.update_priorities(memory_indices, errors)
+        if self.prioritize_replay:
+            predictions = self._model.predict(state)
+            errors = abs(predictions[actions_slice] - target)
+            self._memory.update_priorities(memory_indices, errors)
 
     def save(self, path: str):
         self._model.save(path + '.h5')
