@@ -1,4 +1,5 @@
 import json
+import random
 from datetime import datetime
 from time import time
 import os
@@ -48,8 +49,8 @@ def eval_config(config: dict, env, agent_class, n_eps=300, n_evals=20, max_time=
 
 def save(agent, env, duration, train_stats: [dict], eval_stats: [pd.DataFrame]=None, solve_episode=None, output_dir='outputs'):
     date_str = datetime.now().strftime('%d.%m %H.%M')
-    h = hash(agent)
-    save_dir = '{output_dir}/{agent.__class__.__name__} on {env.__class__.__name__} @ {date_str} [{h}]'.format(**locals())
+    h = str(hash(agent)) + '-' + str(random.randint(0, 1e20))
+    save_dir = '{output_dir}/({agent.seed}) {agent.__class__.__name__} on {env.__class__.__name__} @ {date_str} [{h}]'.format(**locals())
     os.makedirs(save_dir, exist_ok=True)
 
     train_df = pd.DataFrame(train_stats)

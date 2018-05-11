@@ -41,6 +41,10 @@ agent_class = {
 }[args.agent]
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s', datefmt='%H:%M:%S')
+# 18.32 latinum
+# mithril layers
+# duranium 19 double?
+# tritanium 18.44-47 idealization?
 
 configs = [
     # lr study
@@ -72,15 +76,15 @@ configs = [
     # dict(idealization=.9),
 
     # double study
-    dict(double=True, target_update_freq=5),
-    dict(double=True, target_update_freq=10),
-    dict(double=True, target_update_freq=25),
-    dict(double=True, target_update_freq=50),
-    dict(double=True, target_update_freq=100),
-    dict(double=True, target_update_freq=150),
-    dict(double=True, idealization=.1),
-    dict(double=True, idealization=.5),
-    dict(double=True, idealization=.9),
+    # dict(double=True, target_update_freq=5),
+    # dict(double=True, target_update_freq=10),
+    # dict(double=True, target_update_freq=25),
+    # dict(double=True, target_update_freq=50),
+    # dict(double=True, target_update_freq=100),
+    # dict(double=True, target_update_freq=150),
+    # dict(double=True, idealization=.1),
+    # dict(double=True, idealization=.5),
+    # dict(double=True, idealization=.9),
 
     # discount study
     # dict(discount=.975),
@@ -89,10 +93,21 @@ configs = [
     # dict(discount=.75),
 
     # exploration study
-    # dict(exploration_anneal_steps=75),
-    # dict(exploration_anneal_steps=75, lr_init=0.002, decay_freq=100, lr_decay=0.35),
-    # dict(exploration_anneal_steps=300),
-    # dict(exploration_anneal_steps=300, lr_init=0.002, decay_freq=100, lr_decay=0.35),
+    dict(exploration_anneal_steps=25),
+    dict(exploration_anneal_steps=50),
+    dict(exploration_anneal_steps=75),
+    dict(exploration_anneal_steps=100),
+    dict(exploration_anneal_steps=125),
+    dict(exploration_anneal_steps=100, exploration_min=.1),
+    dict(exploration_anneal_steps=100, exploration_min=.25),
+    dict(exploration_anneal_steps=50, exploration_min=.5),
+    dict(exploration_start=.9),
+    dict(exploration_start=.75),
+    dict(exploration_start=.5),
+    dict(exploration_start=.8, exploration_anneal_steps=200),
+    dict(exploration_start=.8, exploration_anneal_steps=250),
+    dict(exploration_start=.5, exploration_anneal_steps=200),
+    dict(exploration_start=.5, exploration_anneal_steps=250),
 
     # history length study
     # dict(history_len=3),
@@ -124,7 +139,7 @@ configs = [
     # dict(layer_sizes=(192, 192)),
     # dict(layer_sizes=(256, 256)),
     # dict(layer_sizes=(384, 384)),
-    # dict(layer_sizes=(512, 512)),
+    dict(layer_sizes=(512, 512)),
     # dict(layer_sizes=(32, 32, 32)),  # same thrice
     # dict(layer_sizes=(64, 64, 64)),
     # dict(layer_sizes=(128, 128, 128)),
@@ -137,13 +152,6 @@ configs = [
     # dict(batch_size=16),
     # dict(batch_size=64),
     # dict(batch_size=128),
-
-    # double study
-    # dict(double=True, target_update_freq=5),
-    # dict(double=True, target_update_freq=10),
-    # dict(double=True, target_update_freq=25),
-    # dict(double=True, target_update_freq=50),
-    # dict(double=True, target_update_freq=100),
 ]
 
 
