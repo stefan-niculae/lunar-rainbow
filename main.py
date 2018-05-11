@@ -14,14 +14,16 @@ from simulation import save
 parser = argparse.ArgumentParser(description="Experiment parameters")
 parser.add_argument('--env',            type=str, default='lander',       choices=['pole', 'lander'],  help='The environment to run in')
 parser.add_argument('--agent',          type=str, default='dqnp',    choices=['ql', 'qlp', 'dqn', 'dqnp'],  help='The agent that learns and performs')
+parser.add_argument('--n-jobs',         type=int, default=1,           help='Number of parallel seeds to try (-1 for all)')
 # parser.add_argument('--discr',          type=str, default='observed',   choices=['theory', 'observed'],  help='Discretization type')
+
 parser.add_argument('--episodes',       type=int, default=400,        help="The maximum number of episodes per run")
+parser.add_argument('--max-time',       type=int, default=40*60,        help="Maximum number of seconds a run is allowed to reach the episodes")
+
+parser.add_argument('--no-train-log',  action='store_false',          help='If given, training logs will not be printed')
 parser.add_argument('--eval-interval',  type=int, default=50,          help='After how many episodes to evaluate')
 parser.add_argument('--n-evals',        type=int, default=10,           help='How many times to evaluate')
-parser.add_argument('--n-jobs',         type=int, default=1,           help='Number of parallel seeds to try (-1 for all)')
 parser.add_argument('--output-dir',     type=str, default='outputs',    help='Folder to store result stats (csv)')
-
-log_train_episodes = False
 
 args = parser.parse_args()
 
@@ -60,18 +62,18 @@ configs = [
     # dict(layer_sizes=(256, 384)),
     # dict(layer_sizes=(256, 192)),
     # dict(layer_sizes=(192, 192)),
-    dict(priority_exp=.01),
-    dict(priority_exp=.1),
-    dict(priority_exp=.4),
-    dict(priority_exp=.6),
-    dict(priority_exp=1),
-    dict(priority_exp=5),
-    dict(err_clip=.5),
-    dict(err_clip=1),
-    dict(err_clip=5),
-    dict(err_clip=20),
-    dict(err_clip=50),
-    dict(err_clip=100),
+    # dict(priority_exp=.01),
+    # dict(priority_exp=.1),
+    # dict(priority_exp=.4),
+    # dict(priority_exp=.6),
+    # dict(priority_exp=1),
+    # dict(priority_exp=5),
+    # dict(err_clip=.5),
+    # dict(err_clip=1),
+    # dict(err_clip=5),
+    # dict(err_clip=20),
+    # dict(err_clip=50),
+    # dict(err_clip=100),
     dict(batch_size=16),
     dict(batch_size=64),
     dict(batch_size=128),
@@ -100,12 +102,12 @@ def run_and_save(seed: int):
     """ train """
     for episode in range(1, args.episodes + 1):
         duration = time() - start_time
-        if duration > 40*60:
+        if duration > args.max_time:
             break
 
         agent.train()
         r, s = env.total_reward, env.n_steps
-        if log_train_episodes:
+        if args.log_train_reward:
             logging.info('({seed}) ep {episode}: {r:.2f} reward, {s} steps'.format(**locals()))
         train_stats.append(dict(episode=episode, reward=r, steps=s))
 
