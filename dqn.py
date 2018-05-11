@@ -147,8 +147,8 @@ class DQNP(Agent):
         self.lr_min = lr_min
         self._lr = lr_init
 
-        if type(q_clip) is int:
-            q_clip = (-abs(q_clip), +abs(q_clip))
+        if type(q_clip) is not tuple:
+            q_clip = (-abs(int(q_clip)), +abs(int(q_clip)))
         self.q_clip = q_clip
         self.n_epochs = n_epochs
         self.batch_size = batch_size
@@ -191,6 +191,7 @@ class DQNP(Agent):
         self._max_boltzmann = (self.policy == 'max-boltzmann')
 
         # replay
+        memory_size = int(memory_size)
         self.memory_size = memory_size
         self.min_mem_size = min_mem_size
         self._memory = deque(maxlen=memory_size)
