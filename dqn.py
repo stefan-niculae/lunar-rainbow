@@ -1,12 +1,11 @@
 import random
 from collections import deque
-from copy import copy
 import numpy as np
 from keras import layers
 from keras.models import Sequential, Model
 from keras.layers import Dense, AlphaDropout, Dropout
 from keras.layers.normalization import BatchNormalization
-from keras.optimizers import Adam
+from keras.optimizers import RMSprop, Adagrad, Adadelta, Adam, Adamax, Nadam
 import keras.backend as K
 from base_agent import Agent
 # from dataclasses import dataclass
@@ -124,18 +123,19 @@ class DQNP(Agent):
     """ TODO: add description for this class
     Simple DQN agent
     """
-    normalize = False
-
     def __init__(self, env, seed=42,
                  lr_init=0.005, decay_freq=200, lr_decay=.1, lr_min=.00001, history_len=2,
                  discount=.99, idealization=1,
-                 exploration_start=1, exploration_min=.01, exploration_anneal_steps=150,
+                 policy='eps-greedy', exploration_start=1, exploration_min=.01, exploration_anneal_steps=150, exploration_temp=1,
                  double=False, target_update_freq=25,
+                 dueling=False, streams_size=0,
                  layer_sizes=(384, 192), loss='mse', hidden_activation='sigmoid', out_activation='linear',
-                 init_method='lecun_uniform',
+                 input_dropout=0, hidden_dropout=0, batch_normalization=False,
+                 weights_init='lecun_uniform', optimizer='adam',
                  q_clip=(-10000, +10000), batch_size=32, n_epochs=1,
-                 memory_size=50000, min_mem_size=1000,
+                 memory_size=50000, min_mem_size=1000, normalize=False,
                  ):
+        self.normalize = normalize
         super().__init__(env, seed=seed)
         self.discount = discount
         self.idealization = idealization
@@ -147,6 +147,8 @@ class DQNP(Agent):
         self.lr_min = lr_min
         self._lr = lr_init
 
+        if type(q_clip) is int:
+            q_clip = (-abs(q_clip), +abs(q_clip))
         self.q_clip = q_clip
         self.n_epochs = n_epochs
         self.batch_size = batch_size
@@ -154,12 +156,22 @@ class DQNP(Agent):
         # build model
         self.layer_sizes = layer_sizes
         self.loss = loss
+        self.input_dropout = input_dropout
+        self.hidden_dropout = hidden_dropout
+        self.batch_normalization = batch_normalization
+        if self.streams_size == -1:
+            self.dueling = False
+        self.streams_size = streams_size
+        self.dueling = dueling
         self.hidden_activation = hidden_activation
         self.out_activation = out_activation
-        self.init_method = init_method
+        self.weights_init = weights_init
         self._model = self._build_model()
+        if not target_update_freq:
+            double = False
         self.double = double
         self.target_update_freq = target_update_freq
+        self.optimizer = optimizer
         if self.double:
             self._target_model = self._build_model()
             self._target_model.set_weights(self._model.get_weights())
@@ -172,6 +184,11 @@ class DQNP(Agent):
         self.exploration_anneal_steps = exploration_anneal_steps
         self._exploration_eps = exploration_start
         self._exploration_drop = (exploration_start - exploration_min) / exploration_anneal_steps
+        self.exploration_temp = exploration_temp
+        self.policy = policy
+        self._eps_greedy    = (self.policy == 'eps-greedy')
+        self._boltzmann     = (self.policy == 'boltzmann')
+        self._max_boltzmann = (self.policy == 'max-boltzmann')
 
         # replay
         self.memory_size = memory_size
@@ -187,38 +204,96 @@ class DQNP(Agent):
             'q_clip',
             'discount', 'history_len', 'idealization',
             'lr_init', 'decay_freq', 'lr_decay', 'lr_min',
-            'layer_sizes', 'hidden_activation', 'out_activation', 'loss',
-            'exploration_start', 'exploration_min', 'exploration_anneal_steps', 'init_method',
-            'normalize'
+            'layer_sizes', 'hidden_activation', 'out_activation', 'loss', 'optimizer',
+            'policy', 'exploration_tmep', 'exploration_start', 'exploration_min', 'exploration_anneal_steps', 'weights_init',
+            'normalize',
+            'dueling', 'streams_size',
+            'input_dropout', 'hidden_dropout', 'batch_normalization',
         ]})
         return c
 
     def _build_model(self) -> Model:
-        model = Sequential()
+        hidden_kwargs = dict(kernel_initializer=self.weights_init, activation=self.hidden_activation)
+        out_kwargs    = dict(kernel_initializer=self.weights_init, activation=self.out_activation)
 
-        model.add(Dense(self.layer_sizes[0], activation=self.hidden_activation,
-                        kernel_initializer=self.init_method,
-                        input_shape=(self._state_size * self.history_len,)))
-        for size in self.layer_sizes[1:]:
-            model.add(Dense(size, activation=self.hidden_activation,
-                            kernel_initializer=self.init_method, ))
+        inp = layers.Input(shape=(self._state_size * self.history_len,))
 
-        model.add(Dense(self._n_actions, activation=self.out_activation,
-                        kernel_initializer=self.init_method))
-        model.compile(optimizer=Adam(lr=self._lr), loss=self.loss)
+        # multiple fully connected layers at the beginning
+        x = inp
+        if self.input_dropout:
+            x = Dropout(self.input_dropout)(x)
+        for size in self.layer_sizes:
+            x = Dense(size, **hidden_kwargs)(x)
+            if self.batch_normalization:
+                x = BatchNormalization()(x)
+            if self.hidden_dropout:
+                x = Dropout(self.hidden_dropout)(x)
+
+        if self.dueling:
+            # action advantage stream
+            a = x
+            if self.streams_size:
+                a = Dense(self.streams_size, **hidden_kwargs)(a)
+            a = Dense(self._n_actions, **out_kwargs)(a)
+            baseline = layers.Lambda(lambda adv: K.mean(adv, axis=1, keepdims=True))(a)
+            a = layers.subtract([a, baseline])
+
+            # state value stream
+            v = x
+            if self.streams_size:
+                v = Dense(self.streams_size, **hidden_kwargs)(v)
+            v = Dense(1, **out_kwargs)(v)
+
+            q = layers.add([v, a])  # combine back streams
+        else:
+            q = Dense(self._n_actions, **out_kwargs)(x)
+
+        model = Model(inp, q)
+
+        optimizer_class = {
+            'rmsprop': RMSprop,
+            'adagrad': Adagrad,
+            'adadelta': Adadelta,
+            'adam': Adam,
+            'adamax': Adamax,
+            'nadam': Nadam,
+        }[self.optimizer]
+        model.compile(optimizer=optimizer_class(lr=self._lr), loss=self.loss)
+
         return model
 
     def _select_action(self, state: [float], eval_mode=False) -> int:
         state = np.expand_dims(state, axis=0)
         q = self._model.predict(state)[0]
+        best = q.argmax()
 
-        # Explore
-        if random.random() < self._exploration_eps and not eval_mode:
-            return np.random.choice(self._n_actions)
+        if eval_mode:
+            return best
 
-        # Exploit
-        else:
-            return q.argmax()
+        explore_roll = random.random() < self._exploration_eps
+
+        if self._eps_greedy:
+            # with eps probability, sample uniformly at random
+            if explore_roll:
+                return np.random.choice(self._n_actions)
+            else:
+                return best
+
+        q = np.clip(q, *self.q_clip)
+        p = np.exp(q / self.exploration_temp)
+        p[best] = 0  # select something other than the best one
+        proportionally_sampled = np.random.choice(self._n_actions, p=p/sum(p))
+
+        if self._max_boltzmann:
+            # with eps probability, sample proportionally to estimated value
+            if explore_roll:
+                return proportionally_sampled
+            else:
+                return best
+
+        if self._boltzmann:
+            # always sample proportionally to estimated value
+            return proportionally_sampled
 
     def _learn_transition(self, state: [float], action: int, reward: float, next_state: [float],
                           done: bool):
@@ -280,10 +355,17 @@ class DQNP(Agent):
 
         sample = [self._memory[i] for i in sample_indices]
         state, action, reward, next_state, done = (np.array(l) for l in zip(*sample))
+
         blank_state = np.zeros(self._state_size)
         prev_state = [np.array(self._memory[i-1][0]) if i > 0 else blank_state for i in sample_indices]
-        next_state = np.concatenate([state, next_state], axis=1)
-        state = np.concatenate([prev_state, state], axis=1)
+
+        if self.history_len == 2:
+            next_state = np.concatenate([state, next_state], axis=1)
+            state = np.concatenate([prev_state, state], axis=1)
+        elif self.history_len == 3:
+            prev_prev_state = [np.array(self._memory[i - 2][0]) if i > 1 else blank_state for i in sample_indices]
+            next_state = np.concatenate([prev_state, state, next_state], axis=1)
+            state = np.concatenate([prev_prev_state, prev_state, state], axis=1)
 
         q = self._model.predict(state)
         q = np.clip(q, *self.q_clip)
