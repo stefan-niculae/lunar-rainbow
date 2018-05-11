@@ -107,7 +107,7 @@ def run_and_save(seed: int):
 
         agent.train()
         r, s = env.total_reward, env.n_steps
-        if args.log_train_reward:
+        if not args.no_train_log:
             logging.info('({seed}) ep {episode}: {r:.2f} reward, {s} steps'.format(**locals()))
         train_stats.append(dict(episode=episode, reward=r, steps=s))
 
