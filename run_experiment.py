@@ -79,7 +79,7 @@ space = [
 ]
 
 seed = 0
-n_jobs = 16
+n_jobs = 2
 n_random_starts = 5
 n_restarts_optimizer = 2
 

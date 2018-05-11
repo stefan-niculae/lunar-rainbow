@@ -159,19 +159,19 @@ class DQNP(Agent):
         self.input_dropout = input_dropout
         self.hidden_dropout = hidden_dropout
         self.batch_normalization = batch_normalization
-        if self.streams_size == -1:
+        if streams_size == -1:
             self.dueling = False
         self.streams_size = streams_size
         self.dueling = dueling
         self.hidden_activation = hidden_activation
         self.out_activation = out_activation
         self.weights_init = weights_init
-        self._model = self._build_model()
         if not target_update_freq:
             double = False
         self.double = double
         self.target_update_freq = target_update_freq
         self.optimizer = optimizer
+        self._model = self._build_model()
         if self.double:
             self._target_model = self._build_model()
             self._target_model.set_weights(self._model.get_weights())
@@ -205,7 +205,7 @@ class DQNP(Agent):
             'discount', 'history_len', 'idealization',
             'lr_init', 'decay_freq', 'lr_decay', 'lr_min',
             'layer_sizes', 'hidden_activation', 'out_activation', 'loss', 'optimizer',
-            'policy', 'exploration_tmep', 'exploration_start', 'exploration_min', 'exploration_anneal_steps', 'weights_init',
+            'policy', 'exploration_temp', 'exploration_start', 'exploration_min', 'exploration_anneal_steps', 'weights_init',
             'normalize',
             'dueling', 'streams_size',
             'input_dropout', 'hidden_dropout', 'batch_normalization',
