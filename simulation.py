@@ -22,11 +22,11 @@ parser.add_argument('--agent',          type=str, default='dqnp',    choices=['q
 parser.add_argument('--n-jobs',         type=int, default=1,           help='Number of parallel seeds to try (-1 for all)')
 # parser.add_argument('--discr',          type=str, default='observed',   choices=['theory', 'observed'],  help='Discretization type')
 
-parser.add_argument('--episodes',       type=int, default=10000,        help="The maximum number of episodes per run")
+parser.add_argument('--episodes',       type=int, default=400,        help="The maximum number of episodes per run")
 parser.add_argument('--max-time',       type=int, default=30*60,        help="Maximum number of seconds a run is allowed to reach the episodes")
 
 parser.add_argument('--no-train-log',  action='store_false',          help='If given, training logs will not be printed')
-parser.add_argument('--eval-interval',  type=int, default=1000000,          help='After how many episodes to evaluate')
+parser.add_argument('--eval-interval',  type=int, default=50,          help='After how many episodes to evaluate')
 parser.add_argument('--n-evals',        type=int, default=10,           help='How many times to evaluate')
 parser.add_argument('--output-dir',     type=str, default='outputs',    help='Folder to store result stats (csv)')
 

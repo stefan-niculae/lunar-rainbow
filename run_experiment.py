@@ -79,20 +79,20 @@ space = [
 ]
 
 seed = 0
-n_jobs = 1
+n_jobs = 16
 n_random_starts = 5
 n_restarts_optimizer = 1
 
 optimizer_type = 'gp'  # gp forest
 acq = 'EI'  # EI PI LCB
-kappa = 2  # for LCB, high = exploration
+# kappa = 2  # for LCB, high = exploration
 
 @use_named_args(space)
 def objective(**params):
     args = parser.parse_args([
         '--env=lander',
         '--agent=dqnp',
-        '--episodes=10',  # as many as there is time for
+        '--episodes=1000',  # as many as there is time for
         '--max-time=1800',  # 30 min
         '--eval-interval=0',  # disable eval
     ])
@@ -106,7 +106,6 @@ def objective(**params):
 
         return -score  # so we minimize this
     except Exception as e:
-        raise e
         print(e, str(e), 'on', params)
         return 100000
 
