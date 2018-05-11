@@ -43,9 +43,28 @@ agent_class = {
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s', datefmt='%H:%M:%S')
 
 configs = [
-    # dict(lr_init=0.002),
+    dict(lr_init=0.001),
+    dict(lr_init=0.003),
+    dict(lr_init=0.01),
+    dict(lr_init=0.025),
+    dict(lr_init=0.05),
+    dict(decay_freq=100, lr_decay=0.3),  # same result
+    dict(decay_freq=50, lr_decay=0.45),
+    dict(decay_freq=25, lr_decay=0.55),
+    dict(lr_decay=0.05),  # faster decrease
+    dict(decay_freq=100, lr_decay=.2),
+    dict(decay_freq=100, lr_decay=.15),
+    dict(decay_freq=100, lr_decay=.1),
+    dict(lr_decay=0.2),  # slower decrease
+    dict(decay_freq=100, lr_decay=.5),
+    dict(decay_freq=100, lr_decay=.7),
+    dict(decay_freq=100, lr_decay=.8),
+    dict(lr_init=0.01, decay_freq=50, lr_decay=.4),  # all 3 combined
+    dict(lr_init=0.003, decay_freq=50, lr_decay=.5),  # all 3 combined
+    dict(lr_init=0.01, decay_freq=100, lr_decay=.3),  # all 3 combined
+    dict(lr_init=0.003, decay_freq=100, lr_decay=.6),  # all 3 combined
+
     # dict(decay_freq=100, lr_decay=0.35),
-    # dict(lr_init=0.002, decay_freq=100, lr_decay=0.35),
     # dict(discount=.975),
     # dict(discount=.9),
     # dict(discount=.9, lr_init=0.002, decay_freq=100, lr_decay=0.35),
@@ -54,54 +73,44 @@ configs = [
     # dict(exploration_anneal_steps=75, lr_init=0.002, decay_freq=100, lr_decay=0.35),
     # dict(exploration_anneal_steps=300),
     # dict(exploration_anneal_steps=300, lr_init=0.002, decay_freq=100, lr_decay=0.35),
-    # dict(),
+
     # dict(history_len=3),
     # dict(history_len=4),
-    dict(layer_sizes=(32,)),  # once
-    dict(layer_sizes=(64,)),
-    dict(layer_sizes=(128,)),
-    dict(layer_sizes=(192,)),
-    dict(layer_sizes=(256,)),
-    dict(layer_sizes=(384,)),
-    dict(layer_sizes=(512,)),
-    dict(layer_sizes=(32, 64)),  # small -> large
-    dict(layer_sizes=(128, 256)),
-    dict(layer_sizes=(192, 384)),
-    dict(layer_sizes=(256, 512)),
-    dict(layer_sizes=(64, 32)),  # large -> small
-    dict(layer_sizes=(128, 64)),
-    dict(layer_sizes=(192, 64)),
-    dict(layer_sizes=(256, 128)),
-    dict(layer_sizes=(256, 192)),
-    dict(layer_sizes=(384, 256)),
-    # dict(layer_sizes=(384, 192)),
-    dict(layer_sizes=(512, 384)),
-    dict(layer_sizes=(32, 32)),  # same twice
-    dict(layer_sizes=(64, 64)),
-    dict(layer_sizes=(128, 128)),
-    dict(layer_sizes=(192, 192)),
-    dict(layer_sizes=(256, 256)),
-    dict(layer_sizes=(384, 384)),
-    dict(layer_sizes=(512, 512)),
-    dict(layer_sizes=(32, 32, 32)),  # same thrice
-    dict(layer_sizes=(64, 64, 64)),
-    dict(layer_sizes=(128, 128, 128)),
-    dict(layer_sizes=(192, 192, 192)),
-    dict(layer_sizes=(256, 256, 256)),
-    dict(layer_sizes=(384, 384, 384)),
-    dict(layer_sizes=(512, 512, 512)),
-    # dict(priority_exp=.01),
-    # dict(priority_exp=.1),
-    # dict(priority_exp=.4),
-    # dict(priority_exp=.6),
-    # dict(priority_exp=1),
-    # dict(priority_exp=5),
-    # dict(err_clip=.5),
-    # dict(err_clip=1),
-    # dict(err_clip=5),
-    # dict(err_clip=20),
-    # dict(err_clip=50),
-    # dict(err_clip=100),
+
+    # dict(layer_sizes=(32,)),  # once
+    # dict(layer_sizes=(64,)),
+    # dict(layer_sizes=(128,)),
+    # dict(layer_sizes=(192,)),
+    # dict(layer_sizes=(256,)),
+    # dict(layer_sizes=(384,)),
+    # dict(layer_sizes=(512,)),
+    # dict(layer_sizes=(32, 64)),  # small -> large
+    # dict(layer_sizes=(128, 256)),
+    # dict(layer_sizes=(192, 384)),
+    # dict(layer_sizes=(256, 512)),
+    # dict(layer_sizes=(64, 32)),  # large -> small
+    # dict(layer_sizes=(128, 64)),
+    # dict(layer_sizes=(192, 64)),
+    # dict(layer_sizes=(256, 128)),
+    # dict(layer_sizes=(256, 192)),
+    # dict(layer_sizes=(384, 256)),
+    # # dict(layer_sizes=(384, 192)),
+    # dict(layer_sizes=(512, 384)),
+    # dict(layer_sizes=(32, 32)),  # same twice
+    # dict(layer_sizes=(64, 64)),
+    # dict(layer_sizes=(128, 128)),
+    # dict(layer_sizes=(192, 192)),
+    # dict(layer_sizes=(256, 256)),
+    # dict(layer_sizes=(384, 384)),
+    # dict(layer_sizes=(512, 512)),
+    # dict(layer_sizes=(32, 32, 32)),  # same thrice
+    # dict(layer_sizes=(64, 64, 64)),
+    # dict(layer_sizes=(128, 128, 128)),
+    # dict(layer_sizes=(192, 192, 192)),
+    # dict(layer_sizes=(256, 256, 256)),
+    # dict(layer_sizes=(384, 384, 384)),
+    # dict(layer_sizes=(512, 512, 512)),
+
     # dict(batch_size=16),
     # dict(batch_size=64),
     # dict(batch_size=128),
