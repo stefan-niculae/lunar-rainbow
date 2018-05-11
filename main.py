@@ -66,10 +66,21 @@ configs = [
     # dict(lr_init=0.003, decay_freq=100, lr_decay=.6),  # all 3 combined
 
     # idealization study
-    dict(idealization=0),
-    dict(idealization=.1),
-    dict(idealization=.5),
-    dict(idealization=.9),
+    # dict(idealization=0),
+    # dict(idealization=.1),
+    # dict(idealization=.5),
+    # dict(idealization=.9),
+
+    # double study
+    dict(double=True, target_update_freq=5),
+    dict(double=True, target_update_freq=10),
+    dict(double=True, target_update_freq=25),
+    dict(double=True, target_update_freq=50),
+    dict(double=True, target_update_freq=100),
+    dict(double=True, target_update_freq=150),
+    dict(double=True, idealization=.1),
+    dict(double=True, idealization=.5),
+    dict(double=True, idealization=.9),
 
     # discount study
     # dict(discount=.975),

@@ -130,6 +130,7 @@ class DQNP(Agent):
                  lr_init=0.005, decay_freq=200, lr_decay=.1, lr_min=.00001, history_len=2,
                  discount=.99, idealization=1,
                  exploration_start=1, exploration_min=.01, exploration_anneal_steps=150,
+                 double=False, target_update_freq=25,
                  layer_sizes=(384, 192), loss='mse', hidden_activation='sigmoid', out_activation='linear',
                  init_method='lecun_uniform',
                  q_clip=(-10000, +10000), batch_size=32, n_epochs=1,
@@ -157,6 +158,13 @@ class DQNP(Agent):
         self.out_activation = out_activation
         self.init_method = init_method
         self._model = self._build_model()
+        self.double = double
+        self.target_update_freq = target_update_freq
+        if self.double:
+            self._target_model = self._build_model()
+            self._target_model.set_weights(self._model.get_weights())
+        else:
+            self._target_model = None
 
         # setup exploration
         self.exploration_start = exploration_start
@@ -243,6 +251,8 @@ class DQNP(Agent):
             if self._episode % self.decay_freq == 0:
                 self._lr = max(self._lr * self.lr_decay, self.lr_min)
                 K.set_value(self._model.optimizer.lr, self._lr)
+            if self.double and self._episode % self.target_update_freq == 0:
+                self._target_model.set_weights(self._model.get_weights())  # TODO try not sudden
 
     def eval(self, n_episodes=100) -> [dict]:
         stats = []
@@ -277,10 +287,18 @@ class DQNP(Agent):
 
         q = self._model.predict(state)
         q = np.clip(q, *self.q_clip)
-        next_q = self._model.predict(next_state)
-        next_q = np.clip(next_q, *self.q_clip)
+
+        if self.double:
+            next_q = self._target_model.predict(next_state)
+            next_q = np.clip(next_q, *self.q_clip)
+            main_argmax = q.argmax(axis=1)  # pick according to latest estimations
+            next_max = next_q[[range(self.batch_size), main_argmax]]  # but use old estimation instead
+        else:
+            next_q = self._model.predict(next_state)
+            next_q = np.clip(next_q, *self.q_clip)
+            next_max = next_q.max(axis=1)
+
         next_avg = next_q.mean(axis=1)
-        next_max = next_q.max(axis=1)
         next_agg = next_avg + (next_max - next_avg) * self.idealization  # works even when next "max" < next avg
 
         target = reward + (1 - done) * (self.discount * next_agg)  # add future discount only if not done
