@@ -43,40 +43,51 @@ agent_class = {
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s', datefmt='%H:%M:%S')
 
 configs = [
-    dict(lr_init=0.001),
-    dict(lr_init=0.003),
-    dict(lr_init=0.01),
-    dict(lr_init=0.025),
-    dict(lr_init=0.05),
-    dict(decay_freq=100, lr_decay=0.3),  # same result
-    dict(decay_freq=50, lr_decay=0.45),
-    dict(decay_freq=25, lr_decay=0.55),
-    dict(lr_decay=0.05),  # faster decrease
-    dict(decay_freq=100, lr_decay=.2),
-    dict(decay_freq=100, lr_decay=.15),
-    dict(decay_freq=100, lr_decay=.1),
-    dict(lr_decay=0.2),  # slower decrease
-    dict(decay_freq=100, lr_decay=.5),
-    dict(decay_freq=100, lr_decay=.7),
-    dict(decay_freq=100, lr_decay=.8),
-    dict(lr_init=0.01, decay_freq=50, lr_decay=.4),  # all 3 combined
-    dict(lr_init=0.003, decay_freq=50, lr_decay=.5),  # all 3 combined
-    dict(lr_init=0.01, decay_freq=100, lr_decay=.3),  # all 3 combined
-    dict(lr_init=0.003, decay_freq=100, lr_decay=.6),  # all 3 combined
+    # lr study
+    # dict(lr_init=0.001),
+    # dict(lr_init=0.003),
+    # dict(lr_init=0.01),
+    # dict(lr_init=0.025),
+    # dict(lr_init=0.05),
+    # dict(decay_freq=100, lr_decay=0.3),  # same result
+    # dict(decay_freq=50, lr_decay=0.45),
+    # dict(decay_freq=25, lr_decay=0.55),
+    # dict(lr_decay=0.05),  # faster decrease
+    # dict(decay_freq=100, lr_decay=.2),
+    # dict(decay_freq=100, lr_decay=.15),
+    # dict(decay_freq=100, lr_decay=.1),
+    # dict(lr_decay=0.2),  # slower decrease
+    # dict(decay_freq=100, lr_decay=.5),
+    # dict(decay_freq=100, lr_decay=.7),
+    # dict(decay_freq=100, lr_decay=.8),
+    # dict(lr_init=0.01, decay_freq=50, lr_decay=.4),  # all 3 combined
+    # dict(lr_init=0.003, decay_freq=50, lr_decay=.5),  # all 3 combined
+    # dict(lr_init=0.01, decay_freq=100, lr_decay=.3),  # all 3 combined
+    # dict(lr_init=0.003, decay_freq=100, lr_decay=.6),  # all 3 combined
 
-    # dict(decay_freq=100, lr_decay=0.35),
+    # idealization study
+    dict(idealization=0),
+    dict(idealization=.1),
+    dict(idealization=.5),
+    dict(idealization=.9),
+
+    # discount study
     # dict(discount=.975),
     # dict(discount=.9),
     # dict(discount=.9, lr_init=0.002, decay_freq=100, lr_decay=0.35),
     # dict(discount=.75),
+
+    # exploration study
     # dict(exploration_anneal_steps=75),
     # dict(exploration_anneal_steps=75, lr_init=0.002, decay_freq=100, lr_decay=0.35),
     # dict(exploration_anneal_steps=300),
     # dict(exploration_anneal_steps=300, lr_init=0.002, decay_freq=100, lr_decay=0.35),
 
+    # history length study
     # dict(history_len=3),
     # dict(history_len=4),
 
+    # layer sizes study
     # dict(layer_sizes=(32,)),  # once
     # dict(layer_sizes=(64,)),
     # dict(layer_sizes=(128,)),
@@ -111,9 +122,12 @@ configs = [
     # dict(layer_sizes=(384, 384, 384)),
     # dict(layer_sizes=(512, 512, 512)),
 
+    # batch size study
     # dict(batch_size=16),
     # dict(batch_size=64),
     # dict(batch_size=128),
+
+    # double study
     # dict(double=True, target_update_freq=5),
     # dict(double=True, target_update_freq=10),
     # dict(double=True, target_update_freq=25),

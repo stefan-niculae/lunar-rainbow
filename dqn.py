@@ -128,15 +128,16 @@ class DQNP(Agent):
 
     def __init__(self, env, seed=42,
                  lr_init=0.005, decay_freq=200, lr_decay=.1, lr_min=.00001, history_len=2,
-                 discount=.99, layer_sizes=(384, 192),
+                 discount=.99, idealization=1,
                  exploration_start=1, exploration_min=.01, exploration_anneal_steps=150,
-                 loss='mse', hidden_activation='sigmoid', out_activation='linear',
+                 layer_sizes=(384, 192), loss='mse', hidden_activation='sigmoid', out_activation='linear',
                  init_method='lecun_uniform',
                  q_clip=(-10000, +10000), batch_size=32, n_epochs=1,
                  memory_size=50000, min_mem_size=1000,
                  ):
         super().__init__(env, seed=seed)
         self.discount = discount
+        self.idealization = idealization
         self.history_len = history_len
 
         self.lr_init = lr_init
@@ -176,7 +177,7 @@ class DQNP(Agent):
             'batch_size', 'n_epochs',
             'memory_size', 'min_mem_size',
             'q_clip',
-            'discount', 'history_len',
+            'discount', 'history_len', 'idealization',
             'lr_init', 'decay_freq', 'lr_decay', 'lr_min',
             'layer_sizes', 'hidden_activation', 'out_activation', 'loss',
             'exploration_start', 'exploration_min', 'exploration_anneal_steps', 'init_method',
@@ -278,10 +279,11 @@ class DQNP(Agent):
         q = np.clip(q, *self.q_clip)
         next_q = self._model.predict(next_state)
         next_q = np.clip(next_q, *self.q_clip)
+        next_avg = next_q.mean(axis=1)
         next_max = next_q.max(axis=1)
+        next_agg = next_avg + (next_max - next_avg) * self.idealization  # works even when next "max" < next avg
 
-        target = reward + (1 - done) * (
-                    self.discount * next_max)  # add future discount only if not done
+        target = reward + (1 - done) * (self.discount * next_agg)  # add future discount only if not done
         q[np.arange(len(action)), action] = target
 
         self._model.fit(state, q, epochs=self.n_epochs, verbose=0)
