@@ -136,9 +136,9 @@ class DQNP(Agent):
                  loss='mse', hidden_activation='sigmoid', out_activation='linear',
                  q_clip=(-10000, +10000),
                  double=False, target_update_freq=25,
-                 batch_size=32, n_epochs=1, memory_size=50000,
+                 batch_size=32, n_epochs=1, memory_size=100000,
                  multi_steps=1, history_len=2,
-                 prioritize_replay=True, priority_exp=0.6, priority_shift=.01,
+                 prioritize_replay=True, priority_exp=0.6, priority_shift=.01, err_clip=10,
                  ):
         super().__init__(env, seed=seed)
         self.discount = discount
@@ -179,6 +179,7 @@ class DQNP(Agent):
         self.prioritize_replay = prioritize_replay
         self.priority_exp = priority_exp
         self.priority_shift = priority_shift
+        self.err_clip = err_clip
         self._memory = Memory(max_size=memory_size,
                               state_size=self._env.state_size,
                               multi_step=multi_steps,
@@ -186,7 +187,7 @@ class DQNP(Agent):
                               batch_size=batch_size,
                               epsilon=priority_shift,
                               prioritize=prioritize_replay,
-                              err_clip=10)
+                              err_clip=err_clip)
 
     @property
     def config(self) -> dict:
@@ -208,7 +209,7 @@ class DQNP(Agent):
             'n_epochs',
             'history_len',
             'multi_steps',
-            'prioritize_replay', 'priority_exp', 'priority_shift',
+            'prioritize_replay', 'priority_exp', 'priority_shift', 'err_clip',
             'double', 'target_update_freq',
         ]})
         return c
@@ -263,15 +264,16 @@ class DQNP(Agent):
         self._episode += 1
 
         # Perform episode end updates
-        self._exploration_eps -= self._exploration_drop
-        self._exploration_eps = max(self._exploration_eps, self.exploration_min)
+        if len(self._memory) >= self.min_mem_size:
+            self._exploration_eps -= self._exploration_drop
+            self._exploration_eps = max(self._exploration_eps, self.exploration_min)
 
-        if self._episode % self.decay_freq == 0:
-            self._lr = max(self._lr * self.lr_decay, self.lr_min)
-            K.set_value(self._model.optimizer.lr, self._lr)
+            if self._episode % self.decay_freq == 0:
+                self._lr = max(self._lr * self.lr_decay, self.lr_min)
+                K.set_value(self._model.optimizer.lr, self._lr)
 
-        if self.double and self._episode % self.target_update_freq == 0:
-            self._target_model.set_weights(self._model.get_weights())  # TODO try not sudden
+            if self.double and self._episode % self.target_update_freq == 0:
+                self._target_model.set_weights(self._model.get_weights())  # TODO try not sudden
 
     def eval(self, n_episodes=100) -> [dict]:
         stats = []

@@ -53,8 +53,8 @@ configs = [
     # dict(exploration_anneal_steps=300),
     # dict(exploration_anneal_steps=300, lr_init=0.002, decay_freq=100, lr_decay=0.35),
     dict(),
-    dict(history_len=3),
-    dict(history_len=4),
+    # dict(history_len=3),
+    # dict(history_len=4),
     # dict(layer_sizes=(256, 256)),
     # dict(layer_sizes=(384, 256)),
     # dict(layer_sizes=(256, 384)),
@@ -66,11 +66,20 @@ configs = [
     dict(priority_exp=.6),
     dict(priority_exp=1),
     dict(priority_exp=5),
-    dict(double=True, target_update_freq=5),
-    dict(double=True, target_update_freq=10),
-    dict(double=True, target_update_freq=25),
-    dict(double=True, target_update_freq=50),
-    dict(double=True, target_update_freq=100),
+    dict(err_clip=.5),
+    dict(err_clip=1),
+    dict(err_clip=5),
+    dict(err_clip=20),
+    dict(err_clip=50),
+    dict(err_clip=100),
+    dict(batch_size=16),
+    dict(batch_size=64),
+    dict(batch_size=128),
+    # dict(double=True, target_update_freq=5),
+    # dict(double=True, target_update_freq=10),
+    # dict(double=True, target_update_freq=25),
+    # dict(double=True, target_update_freq=50),
+    # dict(double=True, target_update_freq=100),
 ]
 
 
@@ -91,7 +100,7 @@ def run_and_save(seed: int):
     """ train """
     for episode in range(1, args.episodes + 1):
         duration = time() - start_time
-        if duration > 2000:
+        if duration > 40*60:
             break
 
         agent.train()
