@@ -157,6 +157,7 @@ if __name__ == '__main__':
             acq_optimizer_kwargs=dict(
                 # n_points=1000,  # if acq optimizer is sampling
                 n_restarts_optimizer=5,
-                n_jobs=1),
+                n_jobs=4  # for the optimizer algorithm, not for getting points
+            ),
         )
     )
