@@ -1,4 +1,4 @@
-from skopt.space import Real, Integer, Categorical, Space
+from skopt.space import Real, Integer, Categorical
 from skopt.utils import use_named_args
 from skopt import dump, Optimizer, dummy_minimize
 from simulation import run_trial, parser
@@ -125,14 +125,7 @@ def run_parallel_optimizer(optimizer, save_path='optimizer.p'):
         try:
             optimizer.tell(list(x), float(y[0]))
         except ValueError:
-            for component, bounds in zip(x, space):
-                if component not in bounds:
-                    print('oob', bounds.name, 'should be:', bounds, 'actually is:', component)
-                else:
-                    print(bounds.name, 'good')
-            exit()
             n_out_of_bounds += 1
-            pass
     print('out of bounds:', n_out_of_bounds, '/', len(prior_ys))
 
     while True:  # will run until interrupted
