@@ -124,11 +124,11 @@ class DQNP(Agent):
     Simple DQN agent
     """
     def __init__(self, env, seed=42,
-                 lr_init=0.005, decay_freq=200, lr_decay=.1, lr_min=.00001, history_len=2,
-                 discount=.99, idealization=1,
-                 policy='eps-greedy', exploration_start=1, exploration_min=.01, exploration_anneal_steps=150, exploration_temp=1,
-                 double=False, target_update_freq=25,
-                 dueling=False, streams_size=0,
+                 lr_init=0.005, decay_freq=200, lr_decay=.1, lr_min=.00001,
+                 discount=.99, history_len=2, idealization=1,
+                 policy='eps-greedy', exploration_start=1, exploration_min=.01, exploration_anneal_steps=150, exploration_temp=-1,
+                 double=False, target_update_freq=0,
+                 dueling=False, streams_size=-1,
                  layer_sizes=(384, 192), loss='mse', hidden_activation='sigmoid', out_activation='linear',
                  input_dropout=0, hidden_dropout=0, batch_normalization=False,
                  weights_init='lecun_uniform', optimizer='adam',
@@ -159,7 +159,7 @@ class DQNP(Agent):
         self.input_dropout = input_dropout
         self.hidden_dropout = hidden_dropout
         self.batch_normalization = batch_normalization
-        if streams_size == -1:
+        if streams_size == -1:  # to make optimization easier (no constraints)
             self.dueling = False
         self.streams_size = streams_size
         self.dueling = dueling
@@ -184,6 +184,8 @@ class DQNP(Agent):
         self.exploration_anneal_steps = exploration_anneal_steps
         self._exploration_eps = exploration_start
         self._exploration_drop = (exploration_start - exploration_min) / exploration_anneal_steps
+        if exploration_temp == -1:
+            policy = 'eps-greedy'
         self.exploration_temp = exploration_temp
         self.policy = policy
         self._eps_greedy    = (self.policy == 'eps-greedy')
@@ -200,16 +202,16 @@ class DQNP(Agent):
     def config(self) -> dict:
         c = super().config
         c.update({attr: getattr(self, attr) for attr in [
-            'batch_size', 'n_epochs',
-            'memory_size', 'min_mem_size',
-            'q_clip',
-            'discount', 'history_len', 'idealization',
             'lr_init', 'decay_freq', 'lr_decay', 'lr_min',
-            'layer_sizes', 'hidden_activation', 'out_activation', 'loss', 'optimizer',
-            'policy', 'exploration_temp', 'exploration_start', 'exploration_min', 'exploration_anneal_steps', 'weights_init',
-            'normalize',
+            'discount', 'history_len', 'idealization',
+            'policy', 'exploration_start', 'exploration_min', 'exploration_anneal_steps', 'exploration_temp',
+            'double', 'target_update_freq',
             'dueling', 'streams_size',
+            'layer_sizes', 'loss', 'hidden_activation', 'out_activation',
             'input_dropout', 'hidden_dropout', 'batch_normalization',
+            'weights_init', 'optimizer',
+            'q_clip', 'batch_size', 'n_epochs',
+            'memory_size', 'min_mem_size', 'normalize',
         ]})
         return c
 

@@ -96,7 +96,34 @@ class NumpyEncoder(json.JSONEncoder):
         else:
             return super().default(obj)
 
-def save(agent, env, duration, train_stats: [dict], eval_stats: [pd.DataFrame]=None, solve_episode=None, output_dir='outputs', tail_len=100) -> dict:
+
+def compute_scores(train_df: pd.DataFrame, eval_df: pd.DataFrame=None, tail_len=100) -> dict:
+    tail_avg = train_df.reward.tail(tail_len).mean()
+    tail_std = train_df.reward.tail(tail_len).std()
+    max_reward = train_df.reward.max()
+    final_reward = train_df.reward.iloc[-1]
+    n_eps = train_df.episode.iloc[-1]
+
+    if eval_df:
+        max_reward = eval_df.reward.max()
+        final_reward = eval_df[eval_df.episode == eval_df.episode.max()].reward.mean()
+
+    aggregated = tail_avg     * .75 +\
+                 final_reward * .15 +\
+                 max_reward   * .10 +\
+                -tail_std     * .10
+
+    return dict(
+            max_reward=max_reward,
+            tail_avg=tail_avg,
+            tail_std=tail_std,
+            final_reward=final_reward,
+            n_eps=n_eps,
+            aggregated=aggregated,
+        )
+
+
+def save(agent, env, duration, train_stats: [dict], eval_stats: [pd.DataFrame]=None, solve_episode=None, output_dir='outputs') -> dict:
     date_str = datetime.now().strftime('%d.%m %H.%M')
     h = str(hash(agent)) + '-' + str(random.randint(0, 1e20))
     save_dir = '{output_dir}/({agent.seed}) {agent.__class__.__name__} on {env.__class__.__name__} @ {date_str} [{h}]'.format(**locals())
@@ -105,28 +132,17 @@ def save(agent, env, duration, train_stats: [dict], eval_stats: [pd.DataFrame]=N
     train_df = pd.DataFrame(train_stats)
     train_df.to_csv(save_dir + '/train.csv', index=False)
 
-    tail_avg = train_df.reward.tail(tail_len).mean()
-    tail_std = train_df.reward.tail(tail_len).std()
-    max_reward = train_df.reward.max()
-    final_reward = train_df.reward.iloc[-1]
-    n_eps = train_df.episode.iloc[-1]
-
     if eval_stats:
-        eval_df  = pd.concat(eval_stats)
-        eval_df .to_csv(save_dir + '/evals.csv', index=False)
+        eval_df = pd.concat(eval_stats)
+        eval_df.to_csv(save_dir + '/evals.csv', index=False)
+    else:
+        eval_df = None
 
-        max_reward = eval_df.reward.max()
-        final_reward = eval_stats[-1].reward.mean()
-
-    run_stats = dict(
-            solve_episode=solve_episode,
-            time=duration,
-            max_reward=max_reward,
-            tail_avg=tail_avg,
-            tail_std=tail_std,
-            final_reward=final_reward,
-            n_eps=n_eps,
-        )
+    run_stats = compute_scores(train_df, eval_df)
+    run_stats.update(
+        solve_episode=solve_episode,
+        time=duration,
+    )
     with open(save_dir + '/stats.json', 'w') as f:
         json.dump(run_stats, f, cls=NumpyEncoder)
     with open(save_dir + '/agent.json', 'w') as f:
