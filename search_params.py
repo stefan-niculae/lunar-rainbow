@@ -80,9 +80,9 @@ space = [
     Integer(1, 10000, name='q_clip'),
 ]
 
-n_jobs = 16
+n_jobs = 8
 seed = 0
-n_initial_random_samples = 1  # per core
+n_initial_random_samples = 0  # per core
 
 
 @use_named_args(space)
@@ -148,10 +148,10 @@ if __name__ == '__main__':
             random_state=seed,
             n_initial_points=0,  # they will be provided in a parallel manner
             base_estimator='GP',  # GP | RF | ET | GBRT
-            acq_func='gp_hedge',  # EI | PI | LCB | gp_hedge
+            acq_func='LCB',  # EI | PI | LCB | gp_hedge
             acq_func_kwargs=dict(
                 xi=0.01,  # distance between suggestions
-                kappa=1.96,  # if acq is LCB (high = exploration)
+                kappa=10,  # if acq is LCB (high = exploration)
             ),
             acq_optimizer='lbfgs',  # sampling | lbfgs
             acq_optimizer_kwargs=dict(
