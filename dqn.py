@@ -8,9 +8,9 @@ from keras.layers.normalization import BatchNormalization
 from keras.optimizers import RMSprop, Adagrad, Adadelta, Adam, Adamax, Nadam
 import keras.backend as K
 from base_agent import Agent
+
+
 # from dataclasses import dataclass
-
-
 # @dataclass  # not available for python <3.6
 # class Transition:
 #     state:      np.array
@@ -21,9 +21,7 @@ from base_agent import Agent
 #     error:      float
 
 class DQN(Agent):
-    """ TODO: add description for this class
-    Simple DQN agent
-    """
+    """  Vanilla DQN agent """
     normalize = False
 
     def __init__(self, env, seed=24,
@@ -120,9 +118,7 @@ class DQN(Agent):
         self._model.save(path + '.h5')
 
 class DQNP(Agent):
-    """ TODO: add description for this class
-    Simple DQN agent
-    """
+    """ DQN agent with a multitude of extensions """
     def __init__(self, env, seed=42,
                  lr_init=0.005, decay_freq=200, lr_decay=.1, lr_min=.00001,
                  discount=.99, history_len=2, idealization=1,
@@ -216,6 +212,7 @@ class DQNP(Agent):
         return c
 
     def _build_model(self) -> Model:
+        """ Consturct the NN that will predict the value function. """
         hidden_kwargs = dict(kernel_initializer=self.weights_init, activation=self.hidden_activation)
         out_kwargs    = dict(kernel_initializer=self.weights_init, activation=self.out_activation)
 
@@ -330,7 +327,7 @@ class DQNP(Agent):
                 self._lr = max(self._lr * self.lr_decay, self.lr_min)
                 K.set_value(self._model.optimizer.lr, self._lr)
             if self.double and self._episode % self.target_update_freq == 0:
-                self._target_model.set_weights(self._model.get_weights())  # TODO try not sudden
+                self._target_model.set_weights(self._model.get_weights())
 
     def eval(self, n_episodes=100) -> [dict]:
         stats = []
@@ -352,7 +349,7 @@ class DQNP(Agent):
         return stats
 
     def _replay(self):
-        """ sample of batch from experience and fit the network to it """
+        """ Sample of batch from experience and fit the network to it. """
         sample_indices = np.random.choice(len(self._memory), self.batch_size, replace=False)
         sample_indices -= 1
 
@@ -361,14 +358,8 @@ class DQNP(Agent):
 
         blank_state = np.zeros(self._state_size)
         prev_state = [np.array(self._memory[i-1][0]) if i > 0 else blank_state for i in sample_indices]
-
-        if self.history_len == 2:
-            next_state = np.concatenate([state, next_state], axis=1)
-            state = np.concatenate([prev_state, state], axis=1)
-        elif self.history_len == 3:
-            prev_prev_state = [np.array(self._memory[i - 2][0]) if i > 1 else blank_state for i in sample_indices]
-            next_state = np.concatenate([prev_state, state, next_state], axis=1)
-            state = np.concatenate([prev_prev_state, prev_state, state], axis=1)
+        next_state = np.concatenate([state, next_state], axis=1)
+        state = np.concatenate([prev_state, state], axis=1)
 
         q = self._model.predict(state)
         q = np.clip(q, *self.q_clip)

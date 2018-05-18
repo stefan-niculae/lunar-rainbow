@@ -4,23 +4,12 @@ from env_wrapper import EnvWrapper, State
 
 
 class Agent:
-    """ Basic agent with some basic functions implemented, such as
-    and epsilon-greedy action selection.
-
-    self._env   A subclass of the EnvWrapper class, which translates the
-                    environment to an interface for generic Reinforcement
-                    Learning Agents
-    self._total_reward  Total reward for one training episode
-
-    Also has some basic algorithm parameters:
-    self._epsilon   Value in [0, 1] for creating randomness in the greedy method
-    self._alpha     Step size parameter
-
-    """
+    """ Base agent class, with train and eval functions implemented """
     normalize = False
     discrete = False
 
     def __init__(self, env: EnvWrapper, seed=24):
+        """ Set reference variables and random seed """
         self._env = env  # environment wrapper that provides extra info
         self._state_size = self._env.state_size
         self._n_actions  = self._env.n_actions
@@ -44,7 +33,7 @@ class Agent:
             seed=self.seed
         )
 
-    def initialise_episode(self):
+    def initialise_episode(self) -> [float]:
         """
         Reset the environment through the wrapper.
         :return: initial state vector
@@ -52,9 +41,7 @@ class Agent:
         return self._env.reset()
 
     def train(self):
-        """
-        Run one episode.
-        """
+        """ Reset the environment and run for the entire episode until it ends. """
         # Initialise the episode and environment
         state = self.initialise_episode()
 
@@ -70,6 +57,7 @@ class Agent:
         self._episode += 1
 
     def eval(self, n_episodes=100) -> [dict]:
+        """ Runs the agent multiple times and reports stats received """
         stats = []
         for episode in range(n_episodes):
             state = self.initialise_episode()
@@ -84,17 +72,13 @@ class Agent:
         return stats
 
     def _select_action(self, state: State, eval_mode=False) -> int:
+        """ What action to take in this situation? """
         raise NotImplementedError
 
     def _learn_transition(self, state: State, action: int, reward: float, next_state: State, done: bool):
-        """
-        :param state:   an iterable object representing a state
-        :param action:  an iterable object representing an action
-        :param reward:  a float or int representing the reward received for
-                        taking action action in state state
-        :param next_state:
-        """
+        """ Turn this experience into knowledge of how to act in the future. """
         raise NotImplementedError
 
     def save(self, path: str):
+        """ Serialize information about the model so it may be loaded later """
         raise NotImplementedError

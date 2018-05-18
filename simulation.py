@@ -52,15 +52,11 @@ def run_trial(seed: int, args, **agent_params) -> dict:
 
     env = env_class()
     agent = agent_class(env, seed=seed, **agent_params)
-    logging.info('Env' +    env_class.__name__ +   str(env.config))
+    logging.info('Env' +     env_class.__name__ +   str(env.config))
     logging.info('Agent' + agent_class.__name__ + str(agent.config))
 
     """ train """
     for episode in range(1, args.episodes + 1):
-        duration = time() - start_time
-        if duration > args.max_time:
-            break
-
         agent.train()
         r, s = env.total_reward, env.n_steps
         if not args.no_train_log:
@@ -80,12 +76,16 @@ def run_trial(seed: int, args, **agent_params) -> dict:
             if env.solved(stats.reward):
                 solve_episode = episode
 
-    """ save """
+        duration = time() - start_time
+        if duration > args.max_time:
+            break
+
     duration = time() - start_time
     return save(agent, env, duration, train_stats, eval_stats, solve_episode, args.output_dir)
 
 
 class NumpyEncoder(json.JSONEncoder):
+    """ Because the default encoder does can't handle numpy types (eg: int64). """
     def default(self, obj):
         if isinstance(obj, np.integer):
             return int(obj)
@@ -98,6 +98,8 @@ class NumpyEncoder(json.JSONEncoder):
 
 
 def compute_scores(train_df: pd.DataFrame, eval_df: pd.DataFrame=None, tail_len=100) -> dict:
+    """ Various metrics for training performance """
+
     tail_avg = train_df.reward.tail(tail_len).mean()
     tail_std = train_df.reward.tail(tail_len).std()
     max_reward = train_df.reward.max()
@@ -124,6 +126,8 @@ def compute_scores(train_df: pd.DataFrame, eval_df: pd.DataFrame=None, tail_len=
 
 
 def save(agent, env, duration, train_stats: [dict], eval_stats: [pd.DataFrame]=None, solve_episode=None, output_dir='outputs') -> dict:
+    """ Serialize and write to disk information about the learning process and its results. """
+
     date_str = datetime.now().strftime('%d.%m %H.%M')
     h = str(hash(agent)) + '-' + str(random.randint(0, 1e20))
     save_dir = '{output_dir}/({agent.seed}) {agent.__class__.__name__} on {env.__class__.__name__} @ {date_str} [{h}]'.format(**locals())

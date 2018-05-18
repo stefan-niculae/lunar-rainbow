@@ -1,0 +1,1 @@
+{"seed": 24, "init_mean": 0, "init_std": 0.1, "lr_init": 0.48227306094453914, "lr_decay": 0.19302684425393518, "decay_freq": 1000.0, "lr_min": 0.0001, "discount": 0.7441912616574788, "idealization": 0.12559847479756553, "exploration_start": 1.0, "exploration_min": 0.001, "anneal_steps": 300.0}

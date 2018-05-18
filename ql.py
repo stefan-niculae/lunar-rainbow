@@ -6,14 +6,7 @@ from collections import defaultdict
 
 
 class QL(Agent):
-    """ A q-learning class based on Víctor Mayoral Vilches' Q-learning algorithm
-    from https://github.com/vmayoral/basic_reinforcement_learning/blob/master/tutorial4
-    and on the Q-learning (off-policy TD control) algorithm as described in
-        Sutton and Barto
-        Reinforcement Learning: An Introduction, Chapter 6.5
-        2nd edition, Online Draft, January 1 2018 version, retrieved from
-        http://incompleteideas.net/book/the-book-2nd.html
-    """
+    """ Vanilla Q-Learning """
     discrete = True
 
     def __init__(self, env, seed=24, discount=.9, epsilon=.1, lr=.5):
@@ -24,14 +17,6 @@ class QL(Agent):
         self.q = defaultdict(lambda: 0.)    # key: (state, action), value: corresponding value
 
     def _select_action(self, state: tuple, eval_mode=False) -> int:
-        """
-        Get the state-action values and use them as input for selecting a state
-        in a epsilon-greedy fashion.
-
-        :param eval_mode:
-        :param state:   a state vector
-        :return:        an action index
-        """
         if random.random() < self.epsilon and not eval_mode:
             return np.random.choice(self._n_actions)
         else:
@@ -39,16 +24,6 @@ class QL(Agent):
             return np.array(q).argmax()
 
     def _learn_transition(self, state: tuple, action, reward, next_state, done):
-        """
-        Apply Q-learning rule:
-            Q(s, a) += alpha * (reward(s, a) + max(Q(s') - Q(s, a))
-
-        :param state:   an iterable object representing a state
-        :param action:  an iterable object representing an action
-        :param reward:  a float or int representing the reward received for
-                        taking action action in state state
-        :param next_state:
-        """
         if self.q[(state, action)] == 0.:
             self.q[(state, action)] = reward
         else:
@@ -62,6 +37,8 @@ class QL(Agent):
 
 
 class QLP(Agent):
+    """ Q-Learning with some extensions """
+
     discrete = True
 
     def __init__(self, env, seed=24,

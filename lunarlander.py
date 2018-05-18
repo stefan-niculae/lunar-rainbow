@@ -2,13 +2,7 @@ from env_wrapper import EnvWrapper, StateInfo
 
 
 class LunarLander(EnvWrapper):
-    """ TODO: Add a description for your wrapper
-    Doesn't do much.. DQN needs no discretization
-
-    actions: main engine | right engine | left engine | do nothing
-    reward: combination of proximity to landing and close to zero speed
-    """
-    # solve_runs = 100
+    solve_runs = 100
     solve_threshold = 200
 
     def __init__(self, discretization='observed'):
@@ -26,8 +20,6 @@ class LunarLander(EnvWrapper):
         else:
             raise NotImplementedError
         super().__init__(env_name='LunarLander-v2', state_infos=state_infos)
-
-        # TODO feature selection: don't show last two state values?
 
     def step(self, action: int):
         state, reward, done = super().step(action)

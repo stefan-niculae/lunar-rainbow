@@ -82,7 +82,7 @@ space = [
 
 n_jobs = 8
 seed = 0
-n_initial_random_samples = 0  # per core
+n_initial_random_samples = 8  # per core
 
 
 @use_named_args(space)
@@ -151,7 +151,7 @@ if __name__ == '__main__':
             acq_func='LCB',  # EI | PI | LCB | gp_hedge
             acq_func_kwargs=dict(
                 xi=0.01,  # distance between suggestions
-                kappa=10,  # if acq is LCB (high = exploration)
+                kappa=.3,  # if acq is LCB (high = exploration)
             ),
             acq_optimizer='lbfgs',  # sampling | lbfgs
             acq_optimizer_kwargs=dict(

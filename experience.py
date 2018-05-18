@@ -2,17 +2,11 @@ import numpy as np
 
 
 class SumTree:
-    """
-    This SumTree code is modified version and the original code is from:
-    https://github.com/jaara/AI-blog/blob/master/SumTree.py
-    Store the data with its priority in priority_heap and data frameworks.
-    """
+    """ inspiration: https://github.com/jaara/AI-blog/blob/master/SumTree.py """
 
     def __init__(self, state_size: int, max_size: int, head_before: int, head_after: int):
         self.max_size = max_size  # for all priority values
         self.priority_heap = np.zeros(2 * max_size - 1)
-        # [--------------parent nodes-------------][-------leaves to record priority-------]
-        #             size: max_size - 1                       size: max_size
         self.states     = np.empty((self.max_size, state_size), dtype=float)
         self.actions    = np.empty(self.max_size, dtype=int)
         self.rewards    = np.empty(self.max_size, dtype=float)
@@ -51,17 +45,6 @@ class SumTree:
             self.priority_heap[tree_idx] += delta
 
     def get_leaf(self, v: float) -> int:
-        """
-        Tree structure and array storage:
-        Tree index:
-             0         -> storing priority sum
-            / \
-          1     2
-         / \   / \
-        3   4 5   6    -> storing priority for transitions
-        Array type for storing:
-        [0,1,2,3,4,5,6]
-        """
         parent_idx = 0
         while True:  # the while loop is faster than the method in the reference code
             left_idx = 2 * parent_idx + 1  # this leaf's left and right kids
@@ -92,24 +75,12 @@ class SumTree:
 
 
 class Memory:
-    """
-    This SumTree code is modified version and the original code is from:
-    https://github.com/jaara/AI-blog/blob/master/Seaquest-DDQN-PER.py
-    """
+    """ inspiration: https://github.com/jaara/AI-blog/blob/master/Seaquest-DDQN-PER.py """
     # beta = 0.4  # importance-sampling, from initial value increasing to 1
     # beta_increment_per_sampling = 0.001
 
     def __init__(self, state_size: int, max_size: int, multi_step: int, history_len: int, batch_size: int, epsilon: float,
                  prioritize: bool, err_clip: float):
-        """
-
-        :param max_size:
-        :param multi_step:
-        :param history_len:
-        :param batch_size:
-        :param epsilon: small amount to avoid zero priority
-        :param prioritize:
-        """
         self.tree = SumTree(state_size, max_size, head_before=history_len, head_after=multi_step)
         self.max_size = max_size
         self.history_len = history_len
@@ -117,7 +88,7 @@ class Memory:
         self.batch_size = batch_size
         self.epsilon = epsilon
         self.err_clip = err_clip
-        self.prioritize = prioritize  # TODO
+        self.prioritize = prioritize
 
     def __len__(self):
         return self.tree.n_entries
@@ -150,11 +121,9 @@ class Memory:
         # self.beta = min(1, self.beta)  # max = 1
 
         history_indices = indices + np.expand_dims(np.arange(self.history_len), axis=1)
-        # history_indices %= self.max_size
         s = np.concatenate(self.tree.states[history_indices], axis=1)
 
         history_indices += 1
-        # history_indices %= self.max_size
         ns = np.concatenate(self.tree.states[history_indices], axis=1)
 
         if self.multi_step == 1:
@@ -163,7 +132,7 @@ class Memory:
             returns = np.zeros(self.batch_size)
             for sample_number, sampled_idx in enumerate(indices):
                 for step in range(self.multi_step):
-                    current_idx = (sampled_idx + step) #% self.size
+                    current_idx = (sampled_idx + step)
                     if self.tree.terminals[current_idx]:  # don't consider further rewards one the episode is marked done
                         break
                     returns[sample_number] += discount ** step * self.tree.rewards[current_idx]
@@ -172,9 +141,6 @@ class Memory:
         return s, self.tree.actions[indices], returns, ns, self.tree.terminals[indices], tree_indices
 
     def update_priorities(self, indices: [int], errors: [float], alpha: float):
-        """
-        alpha (0-1): convert the importance of TD error to priority
-        """
         errors = abs(errors)
         errors += self.epsilon  # avoid 0
         errors = np.minimum(errors, self.err_clip)

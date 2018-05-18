@@ -1,3 +1,5 @@
+""" Visualization functions """
+
 import matplotlib.pyplot as plt
 from typing import Union
 from scipy.signal import savgol_filter
@@ -39,17 +41,18 @@ def readable_big_number(x: Union[int, float], precision=1, threshold=1) -> str:
     prefix = '-' if was_negative else ''
     return prefix + nr + suffix
 
-def training_progress_static(dfs: [pd.DataFrame], window_sizes: [int], names: [str], bands=False):
+def training_progress(dfs: [pd.DataFrame], window_sizes: [int], names: [str], bands=False, column='reward') -> [[float]]:
     """ larger `window_size` => smoother curve """
 
     # sort them by the mean value so that the labels are in the same order as the lines
+    smoothed_traces = []
     for i, (df, window_size, name) in enumerate(zip(dfs, window_sizes, names)):
         if window_size % 2 == 0:
             window_size += 1  # must be odd
 
         color = f'C{names.index(name) % 10}'
 
-        stats = df.groupby('episode').describe().reward
+        stats = df.groupby('episode').describe()[column]
         mean = stats['mean']
 
         if bands:
@@ -63,6 +66,7 @@ def training_progress_static(dfs: [pd.DataFrame], window_sizes: [int], names: [s
                 if ws % 2 == 0:
                     ws += 1  # must be odd
             smoothed = savgol_filter(mean, ws, polyorder=1)
+            smoothed_traces.append(smoothed)
             plt.plot(mean.index, smoothed, alpha=1, label=name, color=color)
             mean.plot(alpha=.05, label='', color=color)
 
@@ -74,17 +78,4 @@ def training_progress_static(dfs: [pd.DataFrame], window_sizes: [int], names: [s
 
     plt.legend()  # bottom right
 
-def param_decay(n_episodes, init, decay, min_val, label=None):
-    """ Helps decide exploration parameters by visualizing the decay curve. """
-    xs = list(range(n_episodes))
-    ys = [init]
-
-    for _ in xs[:-1]:
-        # because of floating point errors, compute it iteratively instead of analytically
-        ys.append(max(ys[-1] * decay, min_val))
-
-    plt.plot(xs, ys, label=label)
-
-#     plt.ylim(0, 1)
-    plt.gca().xaxis.set_major_formatter(FuncFormatter(lambda x, _: readable_big_number(x)))
-    plt.xlabel('Episode')
+    return smoothed_traces
