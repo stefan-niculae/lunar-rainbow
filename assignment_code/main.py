@@ -7,9 +7,9 @@ from my_agent import MyAgent
 from lunarlander_wrapper import LunarLanderWrapper
 
 parser = argparse.ArgumentParser(description="Experiment parameters")
-parser.add_argument('-e', '--episodes', type=int, default=20,
+parser.add_argument('-e', '--episodes', type=int, default=500,
                     help="The maximum number of episodes per run")
-parser.add_argument('-r', '--runs', type=int, default=2,
+parser.add_argument('-r', '--runs', type=int, default=10,
                     help="The number of runs (repeats) of the experiment")
 args = parser.parse_args()
 n_episodes = args.episodes
