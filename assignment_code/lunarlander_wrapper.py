@@ -32,6 +32,12 @@ class EnvWrapper(gym.Env):
         self.total_reward = 0
         return self._env.reset()
 
+    def step(self, action: int) -> (State, float, bool):
+        state, reward, done, info = self._env.step(action)
+        self.n_steps += 1
+        self.total_reward += reward
+        return state, reward, done
+
     def close(self):
         self._env.close()
 

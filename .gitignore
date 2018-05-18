@@ -11,8 +11,9 @@ outputs/runs/
 outputs/prior*
 
 # latex typesetting
-.texpadtmp/
-*.key
-fancyhdr.sty
-natbib.sty
-bib_style.bst
+doc/*
+!doc/report.pdf
+!doc/report.tex
+!doc/body_style.sty
+
+assignment_code/*.csv

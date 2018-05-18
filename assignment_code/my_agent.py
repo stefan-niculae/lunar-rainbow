@@ -32,13 +32,37 @@ class Agent:
         """
         return self._env.reset()
 
+    def _select_action(self, state: State, eval_mode=False) -> int:
+        """ What action to take in this situation? """
+        raise NotImplementedError
+
+    def _learn_transition(self, state: State, action: int, reward: float, next_state: State, done: bool):
+        """ Turn this experience into knowledge of how to act in the future. """
+        raise NotImplementedError
+
+    def train(self):
+        """ Reset the environment and run for the entire episode until it ends. """
+        # Initialise the episode and environment
+        state = self.initialise_episode()
+
+        # Main loop of training session
+        done = False
+        while not done:
+            # Select an action, take it and observe outcome
+            action = self._select_action(state)
+            next_state, reward, done = self._env.step(action)
+            self._learn_transition(state, action, reward, next_state, done)
+            state = next_state
+
+        self._episode += 1
+
 
 class MyAgent(Agent):
     """ TODO: add description for this class
     Simple DQN agent
     """
     def __init__(self, wrapper, seed=42,
-                 lr_init=0.005, decay_freq=200, lr_decay=.1, lr_min=.00001, history_len=2,
+                 lr_init=0.005, decay_freq=200, lr_decay=.1, lr_min=.00001,
                  discount=.99, layer_sizes=(384, 192),
                  exploration_start=1, exploration_min=.01, exploration_anneal_steps=150,
                  loss='mse', hidden_activation='sigmoid', out_activation='linear', init_method='lecun_uniform',
@@ -47,7 +71,6 @@ class MyAgent(Agent):
                  ):
         super().__init__(wrapper, seed=seed)
         self.discount = discount
-        self.history_len = history_len
 
         self.lr_init = lr_init
         self.decay_freq = decay_freq
@@ -83,7 +106,7 @@ class MyAgent(Agent):
         model = Sequential()
 
         model.add(Dense(self.layer_sizes[0], activation=self.hidden_activation, kernel_initializer=self.init_method,
-                        input_shape=(self._state_size * self.history_len,)))
+                        input_shape=(self._state_size,)))
         for size in self.layer_sizes[1:]:
             model.add(Dense(size, activation=self.hidden_activation, kernel_initializer=self.init_method,))
 
@@ -111,23 +134,9 @@ class MyAgent(Agent):
         if len(self._memory) >= self.min_mem_size:
             self._replay()
 
-    def train(self):
+    def train(self) -> float:
         """ Reset the environment and run for the entire episode until it ends. """
-        blank_state = np.zeros(self._state_size)
-        state_history = deque([blank_state] * (self.history_len-1), maxlen=self.history_len)  # to be copied
-        current_state = self.initialise_episode()
-        done = False
-
-        while not done:
-            state_history.append(current_state)
-
-            action = self._select_action(np.concatenate(state_history))
-            next_state, reward, done = self._env.step(action)
-            self._learn_transition(current_state, action, reward, next_state, done)
-
-            current_state = next_state
-
-        self._episode += 1
+        super().train()
 
         # Perform episode end updates
         if len(self._memory) >= self.min_mem_size:
