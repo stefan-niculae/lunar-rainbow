@@ -141,7 +141,7 @@ class MyAgent(Agent):
             model.add(Dense(size, **hidden_kwargs))
 
         # Different activation for the output layer: one output for each possible action
-        model.add(Dense(self._env._n_actions,
+        model.add(Dense(self._env.n_actions,
                         activation=self.out_activation, kernel_initializer=self.init_method))
 
         model.compile(optimizer=Adam(lr=self._lr), loss=self.loss)
