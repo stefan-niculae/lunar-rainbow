@@ -51,7 +51,7 @@ class EnvWrapper(gym.Env):
             if len(rewards) < self.solve_runs:
                 return False
             rewards = rewards[-self.solve_runs:]
-        return rewards.mean() > self.solve_threshold
+        return np.array(rewards).mean() > self.solve_threshold
 
 
 class LunarLanderWrapper(EnvWrapper):
