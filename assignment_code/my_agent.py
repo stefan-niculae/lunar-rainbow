@@ -166,7 +166,7 @@ class MyAgent(Agent):
         """ After finishing training for one episode, update decreasing parameters. """
         super().train()
 
-        if len(self._memory) < self.min_mem_size:  # only decrease after learning has started
+        if len(self._memory) >= self.min_mem_size:  # only decrease after learning has started
             # Decrease exploration rate
             self._exploration_eps -= self._exploration_drop
             self._exploration_eps = max(self._exploration_eps, self.exploration_min)
