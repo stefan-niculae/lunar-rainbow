@@ -3,7 +3,7 @@ appnope==0.1.0
 astor==0.6.2
 backcall==0.1.0
 bayesian-optimization==0.6.0
-bleach==1.5.0
+bleach==3.1.1
 Box2D-kengz==2.3.3
 certifi==2018.1.18
 chardet==3.0.4
